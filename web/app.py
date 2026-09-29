@@ -9,7 +9,7 @@ import qrcode
 import streamlit as st
 from core import (initialize, create_session, list_sessions, get_session, set_session_active,
                   start_attempt, attempt_view, submit_answer, results, export_xlsx,
-                  bank_from_csv, question_template)
+                  bank_from_csv, question_template, sample_bank_csv)
 
 DB = os.environ.get("EXAM_DB_PATH", "web/data/exams.sqlite3")
 PUBLIC_URL = os.environ.get("EXAM_PUBLIC_URL", "").rstrip("/")
@@ -69,15 +69,18 @@ def admin_page():
         st.rerun()
     st.warning("This deployment stores sessions and results in a local file. On Streamlit Community Cloud, that file can disappear after a restart or redeploy. Export results promptly; use a durable database before real exams.")
     st.subheader("Create session from prepared test set")
-    st.write("Download the CSV, add one question per row, and enter A, B, C, or D under correct_option. The explanation column may be blank. Save as CSV UTF-8, then upload it here.")
-    st.download_button("Download question template (.csv)", question_template(),
+    st.write("Start with a blank template or the filled 50 question practice sample. Save edited files as CSV UTF-8, then upload them here.")
+    st.download_button("Download blank question template (.csv)", question_template(),
                        file_name="question-template.csv", mime="text/csv")
+    bundled_sample = json.loads((Path(__file__).resolve().parents[1] / "app/src/main/assets/questions.json").read_text(encoding="utf-8"))
+    st.download_button("Download 50 question practice bank (.csv)", sample_bank_csv(bundled_sample),
+                       file_name="sample-practice-bank-50.csv", mime="text/csv")
     sample = st.checkbox("Use bundled 50 question sample bank (practice only)")
     uploaded = st.file_uploader("Upload completed CSV or a bank JSON exported from Android", type=["csv", "json"])
     title = st.text_input("Test set name", placeholder="Aircraft Structures") if uploaded and uploaded.name.lower().endswith(".csv") and not sample else ""
     bank = None
     if sample:
-        bank = json.loads((Path(__file__).resolve().parents[1] / "app/src/main/assets/questions.json").read_text(encoding="utf-8"))
+        bank = bundled_sample
         st.info("Practice sample selected: 50 general questions. It is not official CAAP content.")
     elif uploaded:
         try:

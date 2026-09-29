@@ -24,6 +24,17 @@ def question_template():
     return out.getvalue().encode("utf-8-sig")
 
 
+def sample_bank_csv(payload):
+    """Export the bundled practice bank using the same importable CSV format."""
+    bank = validate_bank(payload)
+    out = io.StringIO(newline="")
+    writer = csv.writer(out)
+    writer.writerow(CSV_HEADER)
+    for q in bank["questions"]:
+        writer.writerow([q["prompt"], *q["options"], "ABCD"[q["correct"]], q.get("explanation", "")])
+    return out.getvalue().encode("utf-8-sig")
+
+
 def bank_from_csv(data, title):
     if len(data) > 2_000_000:
         raise ValueError("Template exceeds 2 MB")

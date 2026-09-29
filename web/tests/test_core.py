@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 from openpyxl import load_workbook
-from web.core import initialize, create_session, list_sessions, start_attempt, attempt_view, submit_answer, results, export_xlsx, set_session_active, question_template, bank_from_csv
+from web.core import initialize, create_session, list_sessions, start_attempt, attempt_view, submit_answer, results, export_xlsx, set_session_active, question_template, bank_from_csv, sample_bank_csv
 
 BANK = {"schema": 1, "title": "Sample", "questions": [
     {"id": "a", "prompt": "One?", "options": ["A", "B", "C", "D"], "correct": 1},
@@ -21,6 +21,15 @@ class SessionTests(unittest.TestCase):
         self.assertEqual(0, bank["questions"][0]["correct"])
         with self.assertRaisesRegex(ValueError, "Row 2"):
             bank_from_csv(question_template() + b"Question,A,B,C,D,E,\r\n", "Structures")
+    def test_sample_download_contains_all_50_importable_questions(self):
+        sample = json.loads((Path(__file__).resolve().parents[2] / "app/src/main/assets/questions.json").read_text(encoding="utf-8"))
+        data = sample_bank_csv(sample)
+        imported = bank_from_csv(data, sample["title"])
+        self.assertEqual(50, len(imported["questions"]))
+        self.assertEqual([q["prompt"] for q in sample["questions"]],
+                         [q["prompt"] for q in imported["questions"]])
+        self.assertEqual([q["correct"] for q in sample["questions"]],
+                         [q["correct"] for q in imported["questions"]])
     def test_random_subset_per_attempt_and_restart(self):
         code = create_session(self.db, BANK, "Morning", 1)
         self.assertEqual(1, next(s for s in list_sessions(self.db) if s["code"] == code)["question_count"])
