@@ -23,6 +23,8 @@ class SessionTests(unittest.TestCase):
     def test_two_sessions_and_concurrent_examiners_are_isolated(self):
         first = create_session(self.db, BANK, "Morning")
         second = create_session(self.db, BANK, "Afternoon")
+        set_session_active(self.db, first, True)
+        set_session_active(self.db, second, True)
         ids = []
         def join(code, name):
             ids.append((code, start_attempt(self.db, code, name, name + "-ID")))
@@ -44,11 +46,22 @@ class SessionTests(unittest.TestCase):
         self.assertEqual(3, wb.active.max_row)
     def test_closed_session_blocks_new_attempt_but_existing_can_finish(self):
         code = create_session(self.db, BANK, "Morning")
+        set_session_active(self.db, code, True)
         aid = start_attempt(self.db, code, "A", "1")
         set_session_active(self.db, code, False)
         with self.assertRaises(ValueError): start_attempt(self.db, code, "B", "2")
         self.assertEqual(2, attempt_view(self.db, aid)["score"])
         submit_answer(self.db, aid, 0, 0)
+    def test_draft_requires_publish_and_closed_session_keeps_results(self):
+        code = create_session(self.db, BANK, "Trial")
+        with self.assertRaises(ValueError): start_attempt(self.db, code, "A", "1")
+        set_session_active(self.db, code, True)
+        aid = start_attempt(self.db, code, "A", "1")
+        set_session_active(self.db, code, False)
+        for _ in range(2):
+            view = attempt_view(self.db, aid)
+            submit_answer(self.db, aid, view["index"], 0)
+        self.assertEqual(1, len(results(self.db, code)))
     def test_rejects_bad_bank(self):
         bad = json.loads(json.dumps(BANK)); bad["questions"][0]["options"] = ["A", "B"]
         with self.assertRaises(ValueError): create_session(self.db, bad, "Bad")

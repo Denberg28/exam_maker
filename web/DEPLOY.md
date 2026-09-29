@@ -23,7 +23,9 @@ EXAM_PUBLIC_URL = "https://YOUR-APP.streamlit.app"
 
 Set `EXAM_PUBLIC_URL` to the actual assigned URL, without a trailing slash, then restart the app and verify a QR link from a separate browser/device. If it is omitted, the portal uses the administrator's current browser URL when generating links. Rotate the password if it is exposed. The default SQLite file is `web/data/exams.sqlite3` and is excluded from git.
 
-The landing page shows a QR code to the exam start page. Scanning it opens the list of active sessions; an examiner selects a session and enters name and ID. Admin can still create a separate QR code for one specific session. Select **Open Admin**, sign in, export a prepared set JSON from Android Admin, upload it, enter a session name, and select **Create session**. If Admin says `Set EXAM_ADMIN_PASSWORD`, add that secret in the Streamlit app settings and reboot the app.
+The landing page shows a QR code to the exam start page. Scanning it opens the list of published sessions; an examiner selects a session and enters name and ID. Admin can still create a separate QR code for one specific session. Select **Open Admin**, sign in, export a prepared set JSON from Android Admin, upload it, enter a session name, and select **Create session**. A new session is a draft; review its title, then press **Publish session**. Its QR code appears and the start page lists it. **Close session** prevents new attempts but lets existing attempts finish and keeps their results exportable.
+
+If Admin reports that it is not configured, open the Streamlit Community Cloud app dashboard, choose this app, open **Settings → Secrets**, enter `EXAM_ADMIN_PASSWORD` as shown above, save and reboot. The local Android Admin password does not configure the server. Do not send or commit the password. A password is required before web creation, publication, or result export can be used.
 
 ## Data retention and intended use
 

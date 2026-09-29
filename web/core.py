@@ -79,7 +79,7 @@ def create_session(path, payload, label):
         raise ValueError("Session name is required (max 200 characters)")
     code = secrets.token_urlsafe(18)
     with _write_lock, connection(path) as db:
-        db.execute("INSERT INTO sessions VALUES (?,?,?,?,?,1)", (code, label, bank["title"], json.dumps(bank, ensure_ascii=False), utc_now()))
+        db.execute("INSERT INTO sessions VALUES (?,?,?,?,?,0)", (code, label, bank["title"], json.dumps(bank, ensure_ascii=False), utc_now()))
     return code
 
 

@@ -49,7 +49,7 @@ def join_page():
 def admin_page():
     st.title("Exam Maker • Admin")
     if not ADMIN_PASSWORD:
-        st.error("Set EXAM_ADMIN_PASSWORD on the server before using Admin.")
+        st.error("Web Admin is not configured. Add EXAM_ADMIN_PASSWORD in the Streamlit app's Settings → Secrets, then reboot the app. The Android Admin password is separate.")
         return
     if not st.session_state.get("admin_ok"):
         with st.form("admin_login"):
@@ -73,29 +73,34 @@ def admin_page():
             if uploaded is None or len(uploaded.getvalue()) > 2_000_000:
                 raise ValueError("Choose a bank JSON under 2 MB")
             code = create_session(DB, json.loads(uploaded.getvalue()), label)
-            st.success("Session created")
-            st.session_state.created_code = code
+            st.success("Draft session created. Review it below, then select Publish session to make it available to examiners.")
+            st.session_state.managed_session = code
         except (ValueError, UnicodeDecodeError, json.JSONDecodeError) as exc:
             st.error(str(exc))
     sessions = list_sessions(DB)
     if sessions:
-        selected_code = st.selectbox("Manage session", [s["code"] for s in sessions],
+        codes = [s["code"] for s in sessions]
+        if st.session_state.get("managed_session") not in codes:
+            st.session_state.managed_session = codes[0]
+        selected_code = st.selectbox("Manage session", codes, key="managed_session",
                                      format_func=lambda code: next(s["label"] + " • " + s["title"] for s in sessions if s["code"] == code))
         session = next(s for s in sessions if s["code"] == selected_code)
-        st.caption(f"{session['completed']} completed • {'open' if session['active'] else 'closed'}")
+        st.caption(f"{session['completed']} completed • {'published' if session['active'] else 'draft / closed'}")
+        if st.button("Close session" if session["active"] else "Publish session", key="toggle_" + session["code"], type="primary" if not session["active"] else "secondary"):
+            set_session_active(DB, session["code"], not session["active"])
+            st.rerun()
         base_url = session_base_url()
-        if base_url:
+        if base_url and session["active"]:
             link = base_url + "/?" + urlencode({"session": session["code"]})
             st.subheader("Examiner QR code")
             st.code(link)
             st.image(qr_png(link), caption="Scan with an Android phone or desktop browser", width=240)
             if not PUBLIC_URL:
                 st.caption("Link uses this browser's address. Set EXAM_PUBLIC_URL if examiners need a different public address.")
-        else:
+        elif not base_url:
             st.warning("Unable to determine this app's URL. Set EXAM_PUBLIC_URL to display the session QR code.")
-        if st.button("Close session" if session["active"] else "Reopen session", key="toggle_" + session["code"]):
-            set_session_active(DB, session["code"], not session["active"])
-            st.rerun()
+        else:
+            st.info("Publish this session to display its examiner QR code and list it on the start page.")
         if st.checkbox("Prepare this session's Excel export"):
             rows = results(DB, session["code"])
             st.download_button("Export session results (.xlsx)", export_xlsx(rows), file_name="results-" + session["code"] + ".xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
