@@ -1,6 +1,6 @@
-# Exam Maker v0.2.0 private testing build
+# Exam Maker v0.3.0 private testing build
 
-Offline sample practice exam. Ten general knowledge questions, four options each. Current score starts at ten and decreases for incorrect answers; correct options are not revealed after submission. This is not a CAAP question bank or official examination app.
+Portrait offline sample practice exam with four choices per question. Ten general knowledge questions, four options each. Current score starts at ten and decreases for incorrect answers; correct options are not revealed after submission. This is not a CAAP question bank or official examination app.
 
 ## Install
 Download `app-debug.apk` below and install on Android 8 or newer. The APK uses the GitHub runner's debug signing key. Android may request permission to install from your browser or file manager.
