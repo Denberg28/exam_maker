@@ -206,18 +206,22 @@ public final class MainActivity extends Activity {
     }
     private void question() {
         if(exam==null) { home(); return; }
+        // Older versions could save a submitted answer before the examiner tapped Next.
+        if(exam.items.get(exam.position).selected>=0) {
+            if(exam.position+1==exam.items.size()) { results(); return; }
+            exam.position++; save();
+        }
         screen(); ExamEngine.Item item=exam.items.get(exam.position);
         label(title+"  •  QUESTION "+(exam.position+1)+" OF "+exam.items.size(),14,ACCENT);
         TextView score=label("Current score  "+exam.score()+" / "+exam.items.size(),18,INK); score.setTypeface(null,Typeface.BOLD);
         TextView prompt=label(item.question.prompt,23,INK); prompt.setTypeface(null,Typeface.BOLD);
         for(int i=0;i<item.order.size();i++) {
-            final int selected=i; String text=(char)('A'+i)+"    "+item.question.options.get(item.order.get(i));
-            choice(text,item.selected==i,item.selected<0?()->{ if(exam.answer(selected)) { save(); question(); } }:null);
-        }
-        if(item.selected>=0) {
-            label("Answer submitted. Current score: "+exam.score()+" / "+exam.items.size()+".",15,MUTED);
-            action(exam.position+1==exam.items.size()?"See final result":"Next question",true,()->{
-                if(exam.position+1<exam.items.size()) { exam.position++; save(); question(); } else results();
+            final int selected=i; String text=item.question.options.get(item.order.get(i));
+            choice(text,false,()->{
+                if(exam.answer(selected)) {
+                    if(exam.position+1<exam.items.size()) { exam.position++; save(); question(); }
+                    else { save(); results(); }
+                }
             });
         }
         action("Back to home",false,()->home());

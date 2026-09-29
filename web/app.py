@@ -165,32 +165,26 @@ def candidate_page(code):
                     st.error(str(exc))
         return
     if view["completed"]:
-        st.markdown("<div style='text-align:center;padding:50px 0 20px'><h2>Exam complete</h2></div>", unsafe_allow_html=True)
-        st.metric("Final score", f"{view['score']} / {view['total']}")
-        st.caption("Your result has been saved. The administrator can export it.")
+        st.markdown(
+            "<div style='text-align:center;padding:64px 12px 40px'>"
+            "<h2>Exam complete</h2><p>Final score</p>"
+            f"<div style='font-size:3.5rem;font-weight:700;color:#245bc6'>{view['score']} / {view['total']}</div>"
+            f"<p style='font-size:1.4rem'>{round(100 * view['score'] / view['total'])}%</p>"
+            "<p>Your result has been saved. The administrator can export it.</p></div>",
+            unsafe_allow_html=True)
         return
     st.caption(f"Question {view['index'] + 1} of {view['total']}")
     st.metric("Current score", f"{view['score']} / {view['total']}")
-    if st.session_state.get("just_answered") == attempt_id:
-        st.success("Answer submitted. Your current score is shown above.")
-        if st.button("Next question"):
-            st.session_state.just_answered = None
-            st.rerun()
-        return
     question = view["question"]
     st.subheader(question["prompt"])
-    with st.form("question_" + str(view["index"])):
-        selected = st.radio("Select one answer", range(4), format_func=lambda i: "ABCD"[i] + "  " + question["options"][i], index=None)
-        if st.form_submit_button("Submit choice"):
-            if selected is None:
-                st.warning("Choose an option first.")
-            else:
-                try:
-                    next_view = submit_answer(DB, attempt_id, view["index"], selected)
-                    st.session_state.just_answered = None if next_view["completed"] else attempt_id
-                    st.rerun()
-                except ValueError as exc:
-                    st.error(str(exc))
+    for selected, answer in enumerate(question["options"]):
+        if st.button(answer, key=f"answer_{attempt_id}_{view['index']}_{selected}"):
+            try:
+                submit_answer(DB, attempt_id, view["index"], selected)
+                st.rerun()
+            except ValueError:
+                # A second click or stale browser view must not record another answer.
+                st.rerun()
 
 if st.query_params.get("admin") == "1":
     admin_page()

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.1 — 2026-09-29
+- Answer buttons show option text and advance immediately on Android and web.
+- Centered the web final score and percentage; preserved duplicate-submission protection.
+
 ## 0.9.0 — 2026-09-29
 - Added 50 bundled practice questions and per-set random exam length on Android. Existing installs receive a separate 50-question sample set.
 - Added bundled sample selection and per-session random question count to Web Admin. Migrated existing sessions without deleting results.

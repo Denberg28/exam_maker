@@ -1,6 +1,9 @@
-# Exam Maker v0.9.0 private testing build
+# Exam Maker v0.9.1 private testing build
 
-## New in 0.9.0
+## New in 0.9.1
+Examiner options now appear as direct answer buttons without A–D prefixes. A tap saves the answer and immediately shows the next question or the final result. Web results center the score and percentage. Existing unfinished Android attempts resume past an answer already submitted in an older build.
+
+## Previously in 0.9.0
 The bundled practice bank has 50 general science and introductory aviation questions. Android Admin can set how many random questions an examiner receives from each test set. Web Admin can select the same sample bank or upload CSV/JSON, then set the random question count for a published session. The count is saved with each attempt/session, and earlier Android data and web sessions remain usable. These sample questions are for software testing and have not been reviewed as CAAP exam content.
 
 ## Previously in 0.8.0
