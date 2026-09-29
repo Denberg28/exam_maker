@@ -25,7 +25,7 @@ jobs:
         run: python3 tools/validate_bank.py && gradle :app:testDebugUnitTest :app:assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
-          name: exam-maker-v0.3.0-debug-apk
+          name: exam-maker-v0.4.0-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
       - name: Publish private testing prerelease
@@ -33,4 +33,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v0.3.0 app/build/outputs/apk/debug/app-debug.apk --prerelease --title "Exam Maker v0.3.0 (testing)" --notes-file RELEASE_NOTES.md
+          gh release create v0.4.0 app/build/outputs/apk/debug/app-debug.apk --prerelease --title "Exam Maker v0.4.0 (testing)" --notes-file RELEASE_NOTES.md

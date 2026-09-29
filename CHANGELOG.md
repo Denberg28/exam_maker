@@ -1,4 +1,9 @@
 # Changelog
+## 0.4.0 — 2026-09-29
+- Local admin account and editable named test sets with four-choice question CRUD.
+- Examiner name/ID collection, persistent completed results, and XLSX export.
+- Resumable attempts use question snapshots so admin changes do not alter an active exam.
+
 ## 0.3.0 — 2026-09-29
 - Lock the app to portrait while retaining the four-choice minimal exam screen.
 

@@ -45,7 +45,7 @@ public final class ExamEngine {
         if(bank==null || bank.isEmpty()) throw new IllegalArgumentException("Empty bank");
         Set<String> ids=new HashSet<>();
         for(Question q:bank) {
-            if(q==null || blank(q.id) || !ids.add(q.id) || blank(q.prompt) || blank(q.explanation) || q.options==null || q.options.size()!=4 || q.correct<0 || q.correct>=q.options.size()) throw new IllegalArgumentException("Invalid question");
+            if(q==null || blank(q.id) || !ids.add(q.id) || blank(q.prompt) || q.options==null || q.options.size()!=4 || q.correct<0 || q.correct>=q.options.size()) throw new IllegalArgumentException("Invalid question");
             Set<String> options=new HashSet<>();
             for(String option:q.options) if(blank(option) || !options.add(option.trim())) throw new IllegalArgumentException("Invalid option");
         }

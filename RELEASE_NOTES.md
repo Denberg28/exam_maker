@@ -1,4 +1,4 @@
-# Exam Maker v0.3.0 private testing build
+# Exam Maker v0.4.0 private testing build
 
 Portrait offline sample practice exam with four choices per question. Ten general knowledge questions, four options each. Current score starts at ten and decreases for incorrect answers; correct options are not revealed after submission. This is not a CAAP question bank or official examination app.
 
@@ -10,3 +10,6 @@ The debug signing key changes between CI runners. A later APK may require uninst
 
 ## Limits
 No physical device test yet. Answers are stored only on-device. No timer, categories, remotely hosted bank, or history. Next milestone: review a sourced CAAP-oriented practice bank and establish stable private signing.
+
+## Admin and results
+Create a local admin password at first use, manage test sets and questions, and export results as an XLSX file. Each examiner enters a name and ID before starting. Results stay on-device until exported. Admin password recovery and cloud backup are not available.
