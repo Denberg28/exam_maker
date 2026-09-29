@@ -1,0 +1,12 @@
+{"schema":1,"bankId":"sample-general-v1","title":"Sample Practice Exam","questions":[
+{"id":"sample-001","prompt":"Which unit measures electric current?","options":["Volt","Ampere","Ohm","Watt"],"correct":1,"explanation":"The SI unit of electric current is the ampere."},
+{"id":"sample-002","prompt":"How many degrees are in a right angle?","options":["45","90","180","360"],"correct":1,"explanation":"A right angle measures 90 degrees."},
+{"id":"sample-003","prompt":"Which instrument measures atmospheric pressure?","options":["Barometer","Thermometer","Ammeter","Anemometer"],"correct":0,"explanation":"A barometer measures atmospheric pressure."},
+{"id":"sample-004","prompt":"Which is the SI unit of force?","options":["Joule","Pascal","Newton","Watt"],"correct":2,"explanation":"The newton is the SI unit of force."},
+{"id":"sample-005","prompt":"What is 12 multiplied by 8?","options":["84","90","96","108"],"correct":2,"explanation":"12 × 8 = 96."},
+{"id":"sample-006","prompt":"Which device converts electrical energy into mechanical rotation?","options":["Resistor","Motor","Capacitor","Fuse"],"correct":1,"explanation":"An electric motor converts electrical energy to mechanical motion."},
+{"id":"sample-007","prompt":"Which statement describes density?","options":["Mass per volume","Force per area","Distance per time","Energy per time"],"correct":0,"explanation":"Density equals mass divided by volume."},
+{"id":"sample-008","prompt":"At standard gravity, which quantity has units of m/s²?","options":["Speed","Mass","Acceleration","Energy"],"correct":2,"explanation":"Acceleration is measured in metres per second squared."},
+{"id":"sample-009","prompt":"Which material is generally a good electrical conductor?","options":["Rubber","Glass","Copper","Dry wood"],"correct":2,"explanation":"Copper is commonly used for electrical wiring."},
+{"id":"sample-010","prompt":"What does a compass primarily indicate?","options":["Temperature","Direction","Pressure","Altitude"],"correct":1,"explanation":"A compass indicates direction relative to magnetic north."}
+]}
