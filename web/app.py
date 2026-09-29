@@ -24,6 +24,13 @@ def qr_png(url):
     return out.getvalue()
 
 
+def session_base_url():
+    """Use the configured canonical URL, or the current browser URL for small demos."""
+    if PUBLIC_URL:
+        return PUBLIC_URL
+    return st.context.url.rstrip("/")
+
+
 def admin_page():
     st.title("Exam Maker • Admin")
     if not ADMIN_PASSWORD:
@@ -55,18 +62,22 @@ def admin_page():
             st.session_state.created_code = code
         except (ValueError, UnicodeDecodeError, json.JSONDecodeError) as exc:
             st.error(str(exc))
-    if not PUBLIC_URL:
-        st.warning("Set EXAM_PUBLIC_URL to the reachable HTTPS or LAN URL before sharing QR links.")
     sessions = list_sessions(DB)
     if sessions:
         selected_code = st.selectbox("Manage session", [s["code"] for s in sessions],
                                      format_func=lambda code: next(s["label"] + " • " + s["title"] for s in sessions if s["code"] == code))
         session = next(s for s in sessions if s["code"] == selected_code)
         st.caption(f"{session['completed']} completed • {'open' if session['active'] else 'closed'}")
-        if PUBLIC_URL:
-            link = PUBLIC_URL + "/?" + urlencode({"session": session["code"]})
+        base_url = session_base_url()
+        if base_url:
+            link = base_url + "/?" + urlencode({"session": session["code"]})
+            st.subheader("Examiner QR code")
             st.code(link)
             st.image(qr_png(link), caption="Scan with an Android phone or desktop browser", width=240)
+            if not PUBLIC_URL:
+                st.caption("Link uses this browser's address. Set EXAM_PUBLIC_URL if examiners need a different public address.")
+        else:
+            st.warning("Unable to determine this app's URL. Set EXAM_PUBLIC_URL to display the session QR code.")
         if st.button("Close session" if session["active"] else "Reopen session", key="toggle_" + session["code"]):
             set_session_active(DB, session["code"], not session["active"])
             st.rerun()
@@ -137,4 +148,8 @@ elif st.query_params.get("session"):
     candidate_page(st.query_params["session"])
 else:
     st.title("Exam Maker")
-    st.info("Open a session QR link to start an exam. Administrators: add ?admin=1 to the portal URL.")
+    st.write("Join an exam using the QR code or link shared by your administrator.")
+    st.info("QR codes appear in Admin after a test set is uploaded and a session is created.")
+    if st.button("Open Admin", type="primary"):
+        st.query_params["admin"] = "1"
+        st.rerun()

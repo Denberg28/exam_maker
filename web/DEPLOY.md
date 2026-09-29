@@ -21,7 +21,9 @@ EXAM_ADMIN_PASSWORD = "replace-with-a-long-unique-secret"
 EXAM_PUBLIC_URL = "https://YOUR-APP.streamlit.app"
 ```
 
-Set `EXAM_PUBLIC_URL` to the actual assigned URL, without a trailing slash, then restart the app and verify a QR link from a separate browser/device. Rotate the password if it is exposed. The default SQLite file is `web/data/exams.sqlite3` and is excluded from git.
+Set `EXAM_PUBLIC_URL` to the actual assigned URL, without a trailing slash, then restart the app and verify a QR link from a separate browser/device. If it is omitted, the portal uses the administrator's current browser URL when generating links. Rotate the password if it is exposed. The default SQLite file is `web/data/exams.sqlite3` and is excluded from git.
+
+The landing page does not display a QR code. Select **Open Admin**, sign in, export a prepared set JSON from Android Admin, upload it, enter a session name, and select **Create session**. The QR code then appears under **Manage session**. If Admin says `Set EXAM_ADMIN_PASSWORD`, add that secret in the Streamlit app settings and reboot the app.
 
 ## Data retention and intended use
 
