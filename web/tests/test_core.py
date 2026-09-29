@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 from openpyxl import load_workbook
-from web.core import initialize, create_session, start_attempt, attempt_view, submit_answer, results, export_xlsx, set_session_active, question_template, bank_from_csv
+from web.core import initialize, create_session, list_sessions, start_attempt, attempt_view, submit_answer, results, export_xlsx, set_session_active, question_template, bank_from_csv
 
 BANK = {"schema": 1, "title": "Sample", "questions": [
     {"id": "a", "prompt": "One?", "options": ["A", "B", "C", "D"], "correct": 1},
@@ -21,6 +21,17 @@ class SessionTests(unittest.TestCase):
         self.assertEqual(0, bank["questions"][0]["correct"])
         with self.assertRaisesRegex(ValueError, "Row 2"):
             bank_from_csv(question_template() + b"Question,A,B,C,D,E,\r\n", "Structures")
+    def test_random_subset_per_attempt_and_restart(self):
+        code = create_session(self.db, BANK, "Morning", 1)
+        self.assertEqual(1, next(s for s in list_sessions(self.db) if s["code"] == code)["question_count"])
+        set_session_active(self.db, code, True)
+        first = start_attempt(self.db, code, "A", "1")
+        second = start_attempt(self.db, code, "B", "2")
+        self.assertEqual(1, attempt_view(self.db, first)["total"])
+        self.assertEqual(1, attempt_view(self.db, second)["total"])
+        initialize(self.db)
+        self.assertEqual(1, attempt_view(self.db, first)["total"])
+        with self.assertRaises(ValueError): create_session(self.db, BANK, "Invalid", 3)
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.db = Path(self.tmp.name) / "exam.sqlite"

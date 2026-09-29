@@ -2,6 +2,7 @@
 import io
 import json
 import os
+from pathlib import Path
 from urllib.parse import urlencode
 
 import qrcode
@@ -71,10 +72,14 @@ def admin_page():
     st.write("Download the CSV, add one question per row, and enter A, B, C, or D under correct_option. The explanation column may be blank. Save as CSV UTF-8, then upload it here.")
     st.download_button("Download question template (.csv)", question_template(),
                        file_name="question-template.csv", mime="text/csv")
+    sample = st.checkbox("Use bundled 50 question sample bank (practice only)")
     uploaded = st.file_uploader("Upload completed CSV or a bank JSON exported from Android", type=["csv", "json"])
-    title = st.text_input("Test set name", placeholder="Aircraft Structures") if uploaded and uploaded.name.lower().endswith(".csv") else ""
+    title = st.text_input("Test set name", placeholder="Aircraft Structures") if uploaded and uploaded.name.lower().endswith(".csv") and not sample else ""
     bank = None
-    if uploaded:
+    if sample:
+        bank = json.loads((Path(__file__).resolve().parents[1] / "app/src/main/assets/questions.json").read_text(encoding="utf-8"))
+        st.info("Practice sample selected: 50 general questions. It is not official CAAP content.")
+    elif uploaded:
         try:
             data = uploaded.getvalue()
             if len(data) > 2_000_000:
@@ -88,9 +93,13 @@ def admin_page():
         except (ValueError, UnicodeDecodeError, json.JSONDecodeError) as exc:
             st.error(str(exc))
     label = st.text_input("Session name", placeholder="Morning session, Group A")
+    count = st.number_input("Random questions per examiner", min_value=1,
+                            max_value=len(bank["questions"]) if bank else 500,
+                            value=len(bank["questions"]) if bank else 1,
+                            help="Each examiner receives this many questions selected independently from the uploaded bank.")
     if st.button("Create session", disabled=bank is None):
         try:
-            code = create_session(DB, bank, label)
+            code = create_session(DB, bank, label, int(count))
             st.success("Draft session created. Review it below, then select Publish session to make it available to examiners.")
             st.session_state.managed_session = code
         except (ValueError, UnicodeDecodeError, json.JSONDecodeError) as exc:
@@ -103,7 +112,7 @@ def admin_page():
         selected_code = st.selectbox("Manage session", codes, key="managed_session",
                                      format_func=lambda code: next(s["label"] + " • " + s["title"] for s in sessions if s["code"] == code))
         session = next(s for s in sessions if s["code"] == selected_code)
-        st.caption(f"{session['completed']} completed • {'published' if session['active'] else 'draft / closed'}")
+        st.caption(f"{session['question_count'] or 'All'} random questions per examiner • {session['completed']} completed • {'published' if session['active'] else 'draft / closed'}")
         if st.button("Close session" if session["active"] else "Publish session", key="toggle_" + session["code"], type="primary" if not session["active"] else "secondary"):
             set_session_active(DB, session["code"], not session["active"])
             st.rerun()

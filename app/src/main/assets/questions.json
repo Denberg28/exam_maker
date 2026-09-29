@@ -1,12 +1,607 @@
-{"schema":1,"bankId":"sample-general-v1","title":"Sample Practice Exam","questions":[
-{"id":"sample-001","prompt":"Which unit measures electric current?","options":["Volt","Ampere","Ohm","Watt"],"correct":1,"explanation":"The SI unit of electric current is the ampere."},
-{"id":"sample-002","prompt":"How many degrees are in a right angle?","options":["45","90","180","360"],"correct":1,"explanation":"A right angle measures 90 degrees."},
-{"id":"sample-003","prompt":"Which instrument measures atmospheric pressure?","options":["Barometer","Thermometer","Ammeter","Anemometer"],"correct":0,"explanation":"A barometer measures atmospheric pressure."},
-{"id":"sample-004","prompt":"Which is the SI unit of force?","options":["Joule","Pascal","Newton","Watt"],"correct":2,"explanation":"The newton is the SI unit of force."},
-{"id":"sample-005","prompt":"What is 12 multiplied by 8?","options":["84","90","96","108"],"correct":2,"explanation":"12 × 8 = 96."},
-{"id":"sample-006","prompt":"Which device converts electrical energy into mechanical rotation?","options":["Resistor","Motor","Capacitor","Fuse"],"correct":1,"explanation":"An electric motor converts electrical energy to mechanical motion."},
-{"id":"sample-007","prompt":"Which statement describes density?","options":["Mass per volume","Force per area","Distance per time","Energy per time"],"correct":0,"explanation":"Density equals mass divided by volume."},
-{"id":"sample-008","prompt":"At standard gravity, which quantity has units of m/s²?","options":["Speed","Mass","Acceleration","Energy"],"correct":2,"explanation":"Acceleration is measured in metres per second squared."},
-{"id":"sample-009","prompt":"Which material is generally a good electrical conductor?","options":["Rubber","Glass","Copper","Dry wood"],"correct":2,"explanation":"Copper is commonly used for electrical wiring."},
-{"id":"sample-010","prompt":"What does a compass primarily indicate?","options":["Temperature","Direction","Pressure","Altitude"],"correct":1,"explanation":"A compass indicates direction relative to magnetic north."}
-]}
+{
+  "schema": 1,
+  "bankId": "sample-general-v2",
+  "title": "Sample Practice Exam (50)",
+  "questions": [
+    {
+      "id": "sample-001",
+      "prompt": "Which unit measures electric current?",
+      "options": [
+        "Volt",
+        "Ampere",
+        "Ohm",
+        "Watt"
+      ],
+      "correct": 1,
+      "explanation": "The SI unit of electric current is the ampere."
+    },
+    {
+      "id": "sample-002",
+      "prompt": "How many degrees are in a right angle?",
+      "options": [
+        "45",
+        "90",
+        "180",
+        "360"
+      ],
+      "correct": 1,
+      "explanation": "A right angle measures 90 degrees."
+    },
+    {
+      "id": "sample-003",
+      "prompt": "Which instrument measures atmospheric pressure?",
+      "options": [
+        "Barometer",
+        "Thermometer",
+        "Ammeter",
+        "Anemometer"
+      ],
+      "correct": 0,
+      "explanation": "A barometer measures atmospheric pressure."
+    },
+    {
+      "id": "sample-004",
+      "prompt": "Which is the SI unit of force?",
+      "options": [
+        "Joule",
+        "Pascal",
+        "Newton",
+        "Watt"
+      ],
+      "correct": 2,
+      "explanation": "The newton is the SI unit of force."
+    },
+    {
+      "id": "sample-005",
+      "prompt": "What is 12 multiplied by 8?",
+      "options": [
+        "84",
+        "90",
+        "96",
+        "108"
+      ],
+      "correct": 2,
+      "explanation": "12 × 8 = 96."
+    },
+    {
+      "id": "sample-006",
+      "prompt": "Which device converts electrical energy into mechanical rotation?",
+      "options": [
+        "Resistor",
+        "Motor",
+        "Capacitor",
+        "Fuse"
+      ],
+      "correct": 1,
+      "explanation": "An electric motor converts electrical energy to mechanical motion."
+    },
+    {
+      "id": "sample-007",
+      "prompt": "Which statement describes density?",
+      "options": [
+        "Mass per volume",
+        "Force per area",
+        "Distance per time",
+        "Energy per time"
+      ],
+      "correct": 0,
+      "explanation": "Density equals mass divided by volume."
+    },
+    {
+      "id": "sample-008",
+      "prompt": "At standard gravity, which quantity has units of m/s²?",
+      "options": [
+        "Speed",
+        "Mass",
+        "Acceleration",
+        "Energy"
+      ],
+      "correct": 2,
+      "explanation": "Acceleration is measured in metres per second squared."
+    },
+    {
+      "id": "sample-009",
+      "prompt": "Which material is generally a good electrical conductor?",
+      "options": [
+        "Rubber",
+        "Glass",
+        "Copper",
+        "Dry wood"
+      ],
+      "correct": 2,
+      "explanation": "Copper is commonly used for electrical wiring."
+    },
+    {
+      "id": "sample-010",
+      "prompt": "What does a compass primarily indicate?",
+      "options": [
+        "Temperature",
+        "Direction",
+        "Pressure",
+        "Altitude"
+      ],
+      "correct": 1,
+      "explanation": "A compass indicates direction relative to magnetic north."
+    },
+    {
+      "id": "sample-011",
+      "prompt": "What is the SI unit of energy?",
+      "options": [
+        "Joule",
+        "Newton",
+        "Pascal",
+        "Ampere"
+      ],
+      "correct": 0,
+      "explanation": "The correct answer is A: Joule."
+    },
+    {
+      "id": "sample-012",
+      "prompt": "Which instrument measures temperature?",
+      "options": [
+        "Barometer",
+        "Thermometer",
+        "Anemometer",
+        "Voltmeter"
+      ],
+      "correct": 1,
+      "explanation": "The correct answer is B: Thermometer."
+    },
+    {
+      "id": "sample-013",
+      "prompt": "How many millimetres are in one metre?",
+      "options": [
+        "10",
+        "100",
+        "1000",
+        "10000"
+      ],
+      "correct": 2,
+      "explanation": "The correct answer is C: 1000."
+    },
+    {
+      "id": "sample-014",
+      "prompt": "What is 15 percent of 200?",
+      "options": [
+        "15",
+        "20",
+        "30",
+        "45"
+      ],
+      "correct": 2,
+      "explanation": "The correct answer is C: 30."
+    },
+    {
+      "id": "sample-015",
+      "prompt": "Which quantity is distance divided by time?",
+      "options": [
+        "Force",
+        "Speed",
+        "Mass",
+        "Pressure"
+      ],
+      "correct": 1,
+      "explanation": "The correct answer is B: Speed."
+    },
+    {
+      "id": "sample-016",
+      "prompt": "Which gas makes up most of Earth’s atmosphere?",
+      "options": [
+        "Oxygen",
+        "Carbon dioxide",
+        "Nitrogen",
+        "Hydrogen"
+      ],
+      "correct": 2,
+      "explanation": "The correct answer is C: Nitrogen."
+    },
+    {
+      "id": "sample-017",
+      "prompt": "Which unit measures electrical resistance?",
+      "options": [
+        "Ampere",
+        "Volt",
+        "Ohm",
+        "Watt"
+      ],
+      "correct": 2,
+      "explanation": "The correct answer is C: Ohm."
+    },
+    {
+      "id": "sample-018",
+      "prompt": "What is the approximate freezing point of water in Celsius at standard pressure?",
+      "options": [
+        "0",
+        "32",
+        "50",
+        "100"
+      ],
+      "correct": 0,
+      "explanation": "The correct answer is A: 0."
+    },
+    {
+      "id": "sample-019",
+      "prompt": "What does a fuse do in an electrical circuit?",
+      "options": [
+        "Stores energy",
+        "Limits excess current",
+        "Increases voltage",
+        "Measures power"
+      ],
+      "correct": 1,
+      "explanation": "The correct answer is B: Limits excess current."
+    },
+    {
+      "id": "sample-020",
+      "prompt": "Which shape has three sides?",
+      "options": [
+        "Square",
+        "Triangle",
+        "Pentagon",
+        "Hexagon"
+      ],
+      "correct": 1,
+      "explanation": "The correct answer is B: Triangle."
+    },
+    {
+      "id": "sample-021",
+      "prompt": "What is 9 squared?",
+      "options": [
+        "18",
+        "72",
+        "81",
+        "99"
+      ],
+      "correct": 2,
+      "explanation": "The correct answer is C: 81."
+    },
+    {
+      "id": "sample-022",
+      "prompt": "Which unit measures frequency?",
+      "options": [
+        "Hertz",
+        "Joule",
+        "Newton",
+        "Tesla"
+      ],
+      "correct": 0,
+      "explanation": "The correct answer is A: Hertz."
+    },
+    {
+      "id": "sample-023",
+      "prompt": "Which component stores electrical charge?",
+      "options": [
+        "Fuse",
+        "Capacitor",
+        "Switch",
+        "Resistor"
+      ],
+      "correct": 1,
+      "explanation": "The correct answer is B: Capacitor."
+    },
+    {
+      "id": "sample-024",
+      "prompt": "Which tool measures length precisely with a sliding scale?",
+      "options": [
+        "Barometer",
+        "Vernier caliper",
+        "Ammeter",
+        "Compass"
+      ],
+      "correct": 1,
+      "explanation": "The correct answer is B: Vernier caliper."
+    },
+    {
+      "id": "sample-025",
+      "prompt": "What is the sum of angles in a triangle?",
+      "options": [
+        "90 degrees",
+        "180 degrees",
+        "270 degrees",
+        "360 degrees"
+      ],
+      "correct": 1,
+      "explanation": "The correct answer is B: 180 degrees."
+    },
+    {
+      "id": "sample-026",
+      "prompt": "Which unit measures pressure?",
+      "options": [
+        "Pascal",
+        "Newton",
+        "Joule",
+        "Kelvin"
+      ],
+      "correct": 0,
+      "explanation": "The correct answer is A: Pascal."
+    },
+    {
+      "id": "sample-027",
+      "prompt": "Which planet is closest to the Sun?",
+      "options": [
+        "Venus",
+        "Earth",
+        "Mercury",
+        "Mars"
+      ],
+      "correct": 2,
+      "explanation": "The correct answer is C: Mercury."
+    },
+    {
+      "id": "sample-028",
+      "prompt": "What is the chemical symbol for oxygen?",
+      "options": [
+        "O",
+        "Ox",
+        "Og",
+        "O2"
+      ],
+      "correct": 0,
+      "explanation": "The correct answer is A: O."
+    },
+    {
+      "id": "sample-029",
+      "prompt": "Which is a renewable energy source?",
+      "options": [
+        "Coal",
+        "Solar energy",
+        "Diesel",
+        "Natural gas"
+      ],
+      "correct": 1,
+      "explanation": "The correct answer is B: Solar energy."
+    },
+    {
+      "id": "sample-030",
+      "prompt": "What is 144 divided by 12?",
+      "options": [
+        "10",
+        "11",
+        "12",
+        "14"
+      ],
+      "correct": 2,
+      "explanation": "The correct answer is C: 12."
+    },
+    {
+      "id": "sample-031",
+      "prompt": "Which quantity is force times perpendicular distance from a pivot?",
+      "options": [
+        "Power",
+        "Torque",
+        "Density",
+        "Voltage"
+      ],
+      "correct": 1,
+      "explanation": "The correct answer is B: Torque."
+    },
+    {
+      "id": "sample-032",
+      "prompt": "What is the SI base unit of mass?",
+      "options": [
+        "Gram",
+        "Kilogram",
+        "Pound",
+        "Tonne"
+      ],
+      "correct": 1,
+      "explanation": "The correct answer is B: Kilogram."
+    },
+    {
+      "id": "sample-033",
+      "prompt": "Which device measures wind speed?",
+      "options": [
+        "Anemometer",
+        "Barometer",
+        "Thermometer",
+        "Hygrometer"
+      ],
+      "correct": 0,
+      "explanation": "The correct answer is A: Anemometer."
+    },
+    {
+      "id": "sample-034",
+      "prompt": "What does GPS primarily use to determine position?",
+      "options": [
+        "Ground radar",
+        "Satellite signals",
+        "Magnetic north",
+        "Cellular towers only"
+      ],
+      "correct": 1,
+      "explanation": "The correct answer is B: Satellite signals."
+    },
+    {
+      "id": "sample-035",
+      "prompt": "Which is a scalar quantity?",
+      "options": [
+        "Velocity",
+        "Acceleration",
+        "Force",
+        "Temperature"
+      ],
+      "correct": 3,
+      "explanation": "The correct answer is D: Temperature."
+    },
+    {
+      "id": "sample-036",
+      "prompt": "What is the area of a rectangle 4 m by 5 m?",
+      "options": [
+        "9 square metres",
+        "18 square metres",
+        "20 square metres",
+        "25 square metres"
+      ],
+      "correct": 2,
+      "explanation": "The correct answer is C: 20 square metres."
+    },
+    {
+      "id": "sample-037",
+      "prompt": "Which force opposes relative motion between contacting surfaces?",
+      "options": [
+        "Buoyancy",
+        "Friction",
+        "Gravity",
+        "Thrust"
+      ],
+      "correct": 1,
+      "explanation": "The correct answer is B: Friction."
+    },
+    {
+      "id": "sample-038",
+      "prompt": "What is the boiling point of water in Celsius at standard atmospheric pressure?",
+      "options": [
+        "0",
+        "50",
+        "100",
+        "212"
+      ],
+      "correct": 2,
+      "explanation": "The correct answer is C: 100."
+    },
+    {
+      "id": "sample-039",
+      "prompt": "Which material is generally an electrical insulator?",
+      "options": [
+        "Copper",
+        "Aluminium",
+        "Rubber",
+        "Silver"
+      ],
+      "correct": 2,
+      "explanation": "The correct answer is C: Rubber."
+    },
+    {
+      "id": "sample-040",
+      "prompt": "What is the unit of electrical potential difference?",
+      "options": [
+        "Volt",
+        "Ampere",
+        "Ohm",
+        "Watt"
+      ],
+      "correct": 0,
+      "explanation": "The correct answer is A: Volt."
+    },
+    {
+      "id": "sample-041",
+      "prompt": "Which calculation gives average speed?",
+      "options": [
+        "Time divided by distance",
+        "Distance divided by time",
+        "Force divided by area",
+        "Mass divided by volume"
+      ],
+      "correct": 1,
+      "explanation": "The correct answer is B: Distance divided by time."
+    },
+    {
+      "id": "sample-042",
+      "prompt": "Which axis describes rotation about an aircraft’s longitudinal axis?",
+      "options": [
+        "Pitch",
+        "Roll",
+        "Yaw",
+        "Climb"
+      ],
+      "correct": 1,
+      "explanation": "The correct answer is B: Roll."
+    },
+    {
+      "id": "sample-043",
+      "prompt": "Which axis describes rotation about an aircraft’s vertical axis?",
+      "options": [
+        "Pitch",
+        "Roll",
+        "Yaw",
+        "Descent"
+      ],
+      "correct": 2,
+      "explanation": "The correct answer is C: Yaw."
+    },
+    {
+      "id": "sample-044",
+      "prompt": "Which primary control surface controls aircraft roll?",
+      "options": [
+        "Rudder",
+        "Elevator",
+        "Ailerons",
+        "Flaps"
+      ],
+      "correct": 2,
+      "explanation": "The correct answer is C: Ailerons."
+    },
+    {
+      "id": "sample-045",
+      "prompt": "Which primary control surface controls aircraft yaw?",
+      "options": [
+        "Rudder",
+        "Elevator",
+        "Ailerons",
+        "Spoilers"
+      ],
+      "correct": 0,
+      "explanation": "The correct answer is A: Rudder."
+    },
+    {
+      "id": "sample-046",
+      "prompt": "Which primary control surface controls aircraft pitch?",
+      "options": [
+        "Rudder",
+        "Elevator",
+        "Ailerons",
+        "Slats"
+      ],
+      "correct": 1,
+      "explanation": "The correct answer is B: Elevator."
+    },
+    {
+      "id": "sample-047",
+      "prompt": "Which instrument shows indicated airspeed?",
+      "options": [
+        "Altimeter",
+        "Airspeed indicator",
+        "Heading indicator",
+        "Turn coordinator"
+      ],
+      "correct": 1,
+      "explanation": "The correct answer is B: Airspeed indicator."
+    },
+    {
+      "id": "sample-048",
+      "prompt": "What is a typical purpose of wing flaps?",
+      "options": [
+        "Increase lift at lower speeds",
+        "Measure fuel flow",
+        "Control yaw only",
+        "Start the engine"
+      ],
+      "correct": 0,
+      "explanation": "The correct answer is A: Increase lift at lower speeds."
+    },
+    {
+      "id": "sample-049",
+      "prompt": "Which force acts opposite the direction of flight through air?",
+      "options": [
+        "Lift",
+        "Thrust",
+        "Drag",
+        "Weight"
+      ],
+      "correct": 2,
+      "explanation": "The correct answer is C: Drag."
+    },
+    {
+      "id": "sample-050",
+      "prompt": "Which force acts toward the centre of Earth?",
+      "options": [
+        "Thrust",
+        "Lift",
+        "Drag",
+        "Weight"
+      ],
+      "correct": 3,
+      "explanation": "The correct answer is D: Weight."
+    }
+  ]
+}

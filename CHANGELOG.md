@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.0 — 2026-09-29
+- Added 50 bundled practice questions and per-set random exam length on Android. Existing installs receive a separate 50-question sample set.
+- Added bundled sample selection and per-session random question count to Web Admin. Migrated existing sessions without deleting results.
+- Added tests for subset selection, restart, and count validation.
+
 ## 0.8.0 — 2026-09-29
 - Reviewed APK set export, local recording, web draft/publish, concurrent attempts and result XLSX export.
 - Set web SQLite WAL mode during initialization instead of on each request and tested restart/resume plus duplicate submission.

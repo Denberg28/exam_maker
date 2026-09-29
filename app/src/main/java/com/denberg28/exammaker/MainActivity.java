@@ -64,7 +64,7 @@ public final class MainActivity extends Activity {
         catch(Exception ex) { screen(); heading("Unable to open exam data"); label("Restart the app or reinstall a verified build. Details: "+ex.getClass().getSimpleName(),16,MUTED); }
     }
     private void seedSample() throws Exception {
-        if(prefs.getBoolean("sample_imported",false)) return;
+        if(prefs.getBoolean("sample_50_imported",false)) return;
         byte[] bytes;
         try(InputStream stream=getAssets().open("questions.json")) {
             java.io.ByteArrayOutputStream out=new java.io.ByteArrayOutputStream(); byte[] buffer=new byte[4096]; int n;
@@ -80,11 +80,13 @@ public final class MainActivity extends Activity {
             sample.add(new ExamEngine.Question(q.getString("id"),q.getString("prompt"),options,q.getInt("correct"),q.optString("explanation","")));
         }
         ExamEngine.validate(sample);
-        if(store.sets().isEmpty()) {
-            long set=store.addSet("Sample Practice Exam");
+        String sampleName=prefs.getBoolean("sample_imported",false)?"Sample Practice Exam (50)":"Sample Practice Exam";
+        boolean exists=false; for(ExamStore.SetRow row:store.sets()) if(row.name.equalsIgnoreCase(sampleName)) exists=true;
+        if(!exists) {
+            long set=store.addSet(sampleName);
             for(ExamEngine.Question q:sample) store.saveQuestion(set,0,q.prompt,q.options,q.correct,q.explanation);
         }
-        prefs.edit().putBoolean("sample_imported",true).apply();
+        prefs.edit().putBoolean("sample_imported",true).putBoolean("sample_50_imported",true).apply();
     }
     private JSONArray snapshot(List<ExamEngine.Question> questions) {
         JSONArray all=new JSONArray();
@@ -105,12 +107,12 @@ public final class MainActivity extends Activity {
                 for(int j=0;j<opts.length();j++) options.add(opts.getString(j));
                 bank.add(new ExamEngine.Question(q.getString("id"),q.getString("prompt"),options,q.getInt("correct"),q.optString("explanation","")));
             }
-            seed=prefs.getLong("seed",0); exam=new ExamEngine(bank,seed,bank.size());
-            JSONArray answers=new JSONArray(prefs.getString("answers","[]")); if(answers.length()!=bank.size()) throw new IllegalArgumentException();
+            seed=prefs.getLong("seed",0); int count=prefs.getInt("exam_count",bank.size()); exam=new ExamEngine(bank,seed,count);
+            JSONArray answers=new JSONArray(prefs.getString("answers","[]")); if(answers.length()!=exam.items.size()) throw new IllegalArgumentException();
             for(int i=0;i<answers.length();i++) {
                 int a=answers.getInt(i); if(a < -1 || a>=4) throw new IllegalArgumentException(); exam.items.get(i).selected=a;
             }
-            int p=prefs.getInt("position",0); if(p<0 || p>=bank.size()) throw new IllegalArgumentException(); exam.position=p;
+            int p=prefs.getInt("position",0); if(p<0 || p>=exam.items.size()) throw new IllegalArgumentException(); exam.position=p;
             title=prefs.getString("title",""); examinerName=prefs.getString("examiner_name",""); examinerId=prefs.getString("examiner_id",""); attemptId=prefs.getString("attempt_id","");
             if(attemptId.isEmpty() || title.isEmpty() || examinerName.isEmpty() || examinerId.isEmpty()) throw new IllegalArgumentException();
         } catch(Exception ex) { exam=null; prefs.edit().remove("snapshot").remove("answers").apply(); }
@@ -119,7 +121,7 @@ public final class MainActivity extends Activity {
         if(exam==null) return;
         JSONArray answers=new JSONArray(); for(ExamEngine.Item item:exam.items) answers.put(item.selected);
         prefs.edit().putString("snapshot",snapshot(bank).toString()).putString("answers",answers.toString())
-            .putLong("seed",seed).putInt("position",exam.position).putString("title",title)
+            .putLong("seed",seed).putInt("exam_count",exam.items.size()).putInt("position",exam.position).putString("title",title)
             .putString("examiner_name",examinerName).putString("examiner_id",examinerId).putString("attempt_id",attemptId).commit();
     }
     private int dp(int value) { return (int)(value*getResources().getDisplayMetrics().density+0.5f); }
@@ -178,7 +180,7 @@ public final class MainActivity extends Activity {
         if(exam!=null) action(exam.finished()?"View saved result":"Resume "+title,true,()->{ if(exam.finished()) results(); else question(); });
         List<ExamStore.SetRow> sets=store.sets();
         if(sets.isEmpty()) label("No test sets available. Open Admin to create one.",16,MUTED);
-        for(ExamStore.SetRow s:sets) action(s.name+"  •  "+s.count+" questions",false,()->start(s));
+        for(ExamStore.SetRow s:sets) action(s.name+"  •  "+Math.min(s.count,Math.max(1,prefs.getInt("set_count_"+s.id,s.count)))+" random from "+s.count,false,()->start(s));
         action("Join an online exam",false,()->openWebPortal("?join=1"));
         action("Admin",false,()->adminGate());
         label("Bundled sample questions are for testing only, not official CAAP content.",14,MUTED);
@@ -198,7 +200,9 @@ public final class MainActivity extends Activity {
         try { ExamEngine.validate(questions); }
         catch(Exception ex) { error("Test bank invalid. Ask the admin to review it."); return; }
         bank=questions; title=set.name; examinerName=name; examinerId=id; attemptId=UUID.randomUUID().toString();
-        seed=new SecureRandom().nextLong(); exam=new ExamEngine(bank,seed,bank.size()); save(); question();
+        int count=prefs.getInt("set_count_"+set.id,bank.size());
+        if(count<1 || count>bank.size()) { error("The test set changed. Ask admin to set a valid question count."); return; }
+        seed=new SecureRandom().nextLong(); exam=new ExamEngine(bank,seed,count); save(); question();
     }
     private void question() {
         if(exam==null) { home(); return; }
@@ -296,6 +300,18 @@ public final class MainActivity extends Activity {
         int maxPage=questions.isEmpty()?0:(questions.size()-1)/30;
         int currentPage=Math.min(page,maxPage);
         label(questions.size()+" questions • page "+(currentPage+1)+" of "+(maxPage+1),15,MUTED);
+        if(!questions.isEmpty()) {
+            int configured=prefs.getInt("set_count_"+setId,questions.size());
+            EditText countField=field("Random questions per examiner (1–"+questions.size()+")",String.valueOf(Math.min(questions.size(),Math.max(1,configured))));
+            countField.setInputType(2);
+            action("Save exam length",false,()->{
+                try {
+                    int count=Integer.parseInt(countField.getText().toString().trim());
+                    if(count<1 || count>store.questions(setId).size()) throw new IllegalArgumentException();
+                    prefs.edit().putInt("set_count_"+setId,count).apply(); error("Exam length saved: "+count+" random questions.");
+                } catch(Exception ex) { error("Enter a number between 1 and "+store.questions(setId).size()+"."); }
+            });
+        }
         for(int i=currentPage*30;i<Math.min((currentPage+1)*30,questions.size());i++) {
             ExamStore.QuestionRow row=questions.get(i); action(row.question.prompt,false,()->editQuestion(setId,row));
         }

@@ -18,6 +18,16 @@ public class ExamEngineTest {
         ExamEngine b=new ExamEngine(Arrays.asList(q("1"),q("2"),q("3")),192,3);
         for(int i=0;i<3;i++) { assertEquals(a.items.get(i).question.id,b.items.get(i).question.id); assertEquals(a.items.get(i).order,b.items.get(i).order); }
     }
+    @Test public void subsetKeepsRandomSelectionAndAnswerOrderOnRestore() {
+        ExamEngine a=new ExamEngine(Arrays.asList(q("1"),q("2"),q("3")),192,2);
+        ExamEngine b=new ExamEngine(Arrays.asList(q("1"),q("2"),q("3")),192,2);
+        assertEquals(2,a.items.size());
+        assertNotEquals(a.items.get(0).question.id,a.items.get(1).question.id);
+        for(int i=0;i<2;i++) {
+            assertEquals(a.items.get(i).question.id,b.items.get(i).question.id);
+            assertEquals(a.items.get(i).order,b.items.get(i).order);
+        }
+    }
     @Test public void fixedScoreDecreasesOnlyForWrongAnswers() {
         ExamEngine e=new ExamEngine(Arrays.asList(q("1"),q("2"),q("3")),11,3);
         assertEquals(3,e.score());

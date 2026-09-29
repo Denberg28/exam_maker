@@ -88,6 +88,8 @@ def initialize(path):
         );
         CREATE INDEX IF NOT EXISTS idx_attempt_session ON attempts(session_code);
         """)
+        if "question_count" not in {row[1] for row in db.execute("PRAGMA table_info(sessions)")}:
+            db.execute("ALTER TABLE sessions ADD COLUMN question_count INTEGER")
 
 
 def validate_bank(payload):
@@ -116,20 +118,24 @@ def validate_bank(payload):
     return {"schema": 1, "title": title.strip(), "questions": questions}
 
 
-def create_session(path, payload, label):
+def create_session(path, payload, label, question_count=None):
     bank = validate_bank(payload)
+    if question_count is None:
+        question_count = len(bank["questions"])
+    if type(question_count) is not int or not 1 <= question_count <= len(bank["questions"]):
+        raise ValueError("Question count must be between 1 and the bank size")
     label = label.strip()
     if not label or len(label) > 200:
         raise ValueError("Session name is required (max 200 characters)")
     code = secrets.token_urlsafe(18)
     with _write_lock, connection(path) as db:
-        db.execute("INSERT INTO sessions VALUES (?,?,?,?,?,0)", (code, label, bank["title"], json.dumps(bank, ensure_ascii=False), utc_now()))
+        db.execute("INSERT INTO sessions (code,label,title,bank_json,created_at,active,question_count) VALUES (?,?,?,?,?,0,?)", (code, label, bank["title"], json.dumps(bank, ensure_ascii=False), utc_now(), question_count))
     return code
 
 
 def list_sessions(path):
     with connection(path) as db:
-        return [dict(row) for row in db.execute("SELECT code,label,title,created_at,active,(SELECT COUNT(*) FROM attempts a WHERE a.session_code=s.code AND a.completed_at IS NOT NULL) completed FROM sessions s ORDER BY created_at DESC")]
+        return [dict(row) for row in db.execute("SELECT code,label,title,created_at,active,question_count,(SELECT COUNT(*) FROM attempts a WHERE a.session_code=s.code AND a.completed_at IS NOT NULL) completed FROM sessions s ORDER BY created_at DESC")]
 
 
 def get_session(path, code):
@@ -149,13 +155,14 @@ def start_attempt(path, code, name, identifier):
         raise ValueError("Enter examiner name and ID (max 200 characters)")
     with _write_lock, connection(path) as db:
         db.execute("BEGIN IMMEDIATE")
-        row = db.execute("SELECT bank_json FROM sessions WHERE code=? AND active=1", (code,)).fetchone()
+        row = db.execute("SELECT bank_json,question_count FROM sessions WHERE code=? AND active=1", (code,)).fetchone()
         if row is None:
             db.rollback()
             raise ValueError("Session is closed or unavailable")
         questions = json.loads(row[0])["questions"]
         shuffled = list(questions)
         _random.shuffle(shuffled)
+        shuffled = shuffled[:row["question_count"] or len(shuffled)]
         ordered = []
         for q in shuffled:
             indices = list(range(4))

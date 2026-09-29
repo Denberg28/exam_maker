@@ -1,9 +1,12 @@
-# Exam Maker v0.8.0 private testing build
+# Exam Maker v0.9.0 private testing build
 
-## New in 0.8.0
+## New in 0.9.0
+The bundled practice bank has 50 general science and introductory aviation questions. Android Admin can set how many random questions an examiner receives from each test set. Web Admin can select the same sample bank or upload CSV/JSON, then set the random question count for a published session. The count is saved with each attempt/session, and earlier Android data and web sessions remain usable. These sample questions are for software testing and have not been reviewed as CAAP exam content.
+
+## Previously in 0.8.0
 Web Admin now creates drafts that require explicit publication. Results remain exportable after a session closes. Database access was reviewed for concurrent attempts and restart/resume; a hosting data-retention warning appears in Admin. Android still opens the web portal while keeping offline exams and results separate.
 
-Portrait offline sample practice exam with four choices per question. Ten general knowledge questions, four options each. Current score starts at ten and decreases for incorrect answers; correct options are not revealed after submission. This is not a CAAP question bank or official examination app.
+Portrait offline sample practice exam with four choices per question. Fifty practice questions, four options each. Current score starts at the configured exam length and decreases for incorrect answers; correct options are not revealed after submission. This is not a CAAP question bank or official examination app.
 
 ## Install
 Download `app-debug.apk` below and install on Android 8 or newer. The APK uses the GitHub runner's debug signing key. Android may request permission to install from your browser or file manager.
