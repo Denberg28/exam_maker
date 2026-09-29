@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 from openpyxl import load_workbook
-from web.core import initialize, create_session, start_attempt, attempt_view, submit_answer, results, export_xlsx, set_session_active
+from web.core import initialize, create_session, start_attempt, attempt_view, submit_answer, results, export_xlsx, set_session_active, question_template, bank_from_csv
 
 BANK = {"schema": 1, "title": "Sample", "questions": [
     {"id": "a", "prompt": "One?", "options": ["A", "B", "C", "D"], "correct": 1},
@@ -14,6 +14,13 @@ BANK = {"schema": 1, "title": "Sample", "questions": [
 ]}
 
 class SessionTests(unittest.TestCase):
+    def test_csv_template_import(self):
+        raw = question_template() + '"What is a rivet, used for?",Join,Separate,Paint,Measure,A,\r\n'.encode()
+        bank = bank_from_csv(raw, "Structures")
+        self.assertEqual("What is a rivet, used for?", bank["questions"][0]["prompt"])
+        self.assertEqual(0, bank["questions"][0]["correct"])
+        with self.assertRaisesRegex(ValueError, "Row 2"):
+            bank_from_csv(question_template() + b"Question,A,B,C,D,E,\r\n", "Structures")
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.db = Path(self.tmp.name) / "exam.sqlite"
