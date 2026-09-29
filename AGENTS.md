@@ -1,5 +1,5 @@
 # Project continuity
-- Android Java, portrait-only offline MVP; applicationId com.denberg28.exammaker, version 0.6.0 (code 6).
+- Android Java, portrait-only offline MVP with optional web portal handoff; applicationId com.denberg28.exammaker, version 0.7.0 (code 7).
 - Bank is bundled JSON at app/src/main/assets/questions.json; sample general knowledge only, not CAAP content.
 - Validate bank with python3 tools/validate_bank.py before changing or releasing it.
 - Correct options are original indices. ExamEngine shuffles questions and visible options using a saved seed; persistence stores the seed and visible selection indices. Preserve bank order and content under a bankId, or increment bankId to invalidate a saved attempt.
@@ -14,3 +14,4 @@
 - `CsvTemplate` is the Android bulk-entry contract: strict CSV UTF-8 header, correct option A-D, 2 MB/500-row limit. Android Admin previews and imports into a new or existing set using `ExamStore.importQuestions` in one transaction. Keep CSV columns aligned with template docs and tests.
 - Admin question list is paged at 30 and result list shows latest 30, with full XLSX export. Home locks admin and prompts before replacing an unfinished attempt. Choice controls are native buttons for accessibility.
 - Streamlit Cloud entry point is `web/app.py` on `main`, dependencies `web/requirements.txt`; see `web/DEPLOY.md`. Local SQLite on Community Cloud is ephemeral, so never use that deployment for real examiner records without a durable database migration. Keep Streamlit secrets out of git.
+- Android portal handoff uses `https://exammaker.streamlit.app/` in `MainActivity`; home opens `?join=1`, authenticated local Admin opens `?admin=1`. Web Admin has a separate server password. Update this URL deliberately if deployment changes.

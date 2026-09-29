@@ -1,4 +1,9 @@
 # Changelog
+
+## 0.7.0 — 2026-09-29
+- Added Android browser handoff to the hosted exam start and web Admin pages, with no new app permissions.
+- Added a landing QR to the Streamlit open-session list and a direct session QR for each prepared set.
+- Kept offline attempts and online sessions separate; documented the hosted SQLite retention limit.
 ## 0.6.0 — 2026-09-29
 - Download CSV question template; bulk import to a named new set or existing set with preview and atomic validation.
 - Page Android question/result lists, improve choice accessibility and button sizing, confirm replacement of unfinished attempts.

@@ -1,4 +1,4 @@
-# Exam Maker 0.6.0
+# Exam Maker 0.7.0
 
 Portrait Android practice exam that works offline. This build contains ten sample general knowledge questions, not CAAP questions or official exam material.
 
@@ -19,6 +19,8 @@ Tap **Import completed question template (.csv)**, review the validated question
 ## Web QR sessions (self-hosted)
 
 For the GitHub Streamlit Community Cloud deployment settings and data-retention limits, see [web/DEPLOY.md](web/DEPLOY.md).
+
+Android home includes **Join an online exam**, which opens the hosted Streamlit start page in a browser. Android Admin includes **Open web Admin portal**. Export a set from its Android set page and upload the JSON there to create an online session. The web Admin password is separate from the local Android Admin password. The hosted portal is `https://exammaker.streamlit.app/`; it needs internet and a browser. Community Cloud storage is temporary, so do not use it for real examiner records without a durable backend.
 
 The Android admin can export a prepared set as JSON. On a reachable computer/server:
 
@@ -51,7 +53,7 @@ Install JDK 17, Android SDK platform 35 and build-tools 35.0.0, and Gradle 8.11.
 Edit `app/src/main/assets/questions.json`. Each question needs a stable unique `id`, nonempty `prompt` and `explanation`, exactly 4 distinct options, and a zero-based `correct` index. Increment `bankId` when editing published questions, so saved attempts are discarded safely. Content is bundled in APK, not fetched from a server. Question provenance and subject review must precede a CAAP-focused bank.
 
 ## Installation and upgrade
-For private testing, download the successful `exam-maker-v0.6.0-debug-apk` CI artifact, extract `app-debug.apk`, and install it on Android 8 or later. Upgrade using a new APK with the same application ID and signing key and a higher versionCode. GitHub Actions debug signing keys are ephemeral across runners, so a later CI debug artifact may require uninstalling the earlier app, which deletes its saved attempt. Use a stable private signing key for continuous upgrades. For rollback, reinstall an earlier same-key APK after removing the newer version; Android normally rejects version downgrades in place. Save any wanted results before uninstalling.
+For private testing, download the successful `exam-maker-v0.7.0-debug-apk` CI artifact, extract `app-debug.apk`, and install it on Android 8 or later. Upgrade using a new APK with the same application ID and signing key and a higher versionCode. GitHub Actions debug signing keys are ephemeral across runners, so a later CI debug artifact may require uninstalling the earlier app, which deletes its saved attempt. Use a stable private signing key for continuous upgrades. For rollback, reinstall an earlier same-key APK after removing the newer version; Android normally rejects version downgrades in place. Save any wanted results before uninstalling.
 
 ## Known limits and next milestone
 No verified CAAP question bank, multi-admin roles, automatic Android/web sync, timed mode, password recovery, or stable production signing yet. Physical device testing of file pickers, accessibility, and import remains pending. Next: review licensed question provenance and add a versioned subject bank, then set up durable signing and test on a physical Android device.

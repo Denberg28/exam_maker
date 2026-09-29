@@ -40,12 +40,17 @@ jobs:
         run: python3 tools/validate_bank.py && gradle :app:testDebugUnitTest :app:assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
-          name: exam-maker-v0.6.0-debug-apk
+          name: exam-maker-v0.7.0-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
       - name: Publish private testing prerelease
-        if: startsWith(github.ref, 'refs/tags/v') && github.event_name == 'push'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "${GITHUB_REF_NAME}" app/build/outputs/apk/debug/app-debug.apk --prerelease --title "Exam Maker ${GITHUB_REF_NAME} (testing)" --notes-file RELEASE_NOTES.md
+          VERSION="v$(sed -n "s/.*versionName '\([^']*\)'.*/\1/p" app/build.gradle | head -n 1)"
+          if gh release view "$VERSION" >/dev/null 2>&1; then
+            echo "Release $VERSION already exists; no new APK published."
+          else
+            gh release create "$VERSION" app/build/outputs/apk/debug/app-debug.apk --prerelease --title "Exam Maker $VERSION (testing)" --notes-file RELEASE_NOTES.md
+          fi

@@ -3,6 +3,8 @@ package com.denberg28.exammaker;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.ActivityNotFoundException;
+import android.net.Uri;
 import android.os.Bundle;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -35,6 +37,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
 public final class MainActivity extends Activity {
+    private static final String WEB_PORTAL="https://exammaker.streamlit.app/";
     private static final int EXPORT_REQUEST=42, SET_EXPORT_REQUEST=43, TEMPLATE_REQUEST=44, IMPORT_REQUEST=45;
     private static final int INK=Color.rgb(23,35,52), MUTED=Color.rgb(95,108,124);
     private static final int ACCENT=Color.rgb(36,91,198), SURFACE=Color.WHITE;
@@ -159,6 +162,13 @@ public final class MainActivity extends Activity {
         if(click!=null) v.setOnClickListener(w->click.run()); else v.setClickable(false);
     }
     private void error(String message) { Toast.makeText(this,message,Toast.LENGTH_LONG).show(); }
+    private void openWebPortal(String query) {
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(WEB_PORTAL+query)));
+        } catch(ActivityNotFoundException ex) {
+            error("No browser is available. Open "+WEB_PORTAL+" on another device.");
+        }
+    }
     private void home() {
         adminUnlocked=false;
         screen(); heading("Exam Maker");
@@ -169,6 +179,7 @@ public final class MainActivity extends Activity {
         List<ExamStore.SetRow> sets=store.sets();
         if(sets.isEmpty()) label("No test sets available. Open Admin to create one.",16,MUTED);
         for(ExamStore.SetRow s:sets) action(s.name+"  •  "+s.count+" questions",false,()->start(s));
+        action("Join an online exam",false,()->openWebPortal("?join=1"));
         action("Admin",false,()->adminGate());
         label("Bundled sample questions are for testing only, not official CAAP content.",14,MUTED);
     }
@@ -259,6 +270,8 @@ public final class MainActivity extends Activity {
             action("Create",true,()->{ try { editSet(store.addSet(input.getText().toString())); } catch(Exception ex) { error("Name is required and must be unique."); } });
             action("Cancel",false,()->adminHome());
         });
+        label("For web QR sessions, export a set from its page, then upload that JSON in the web Admin portal. Web Admin uses a separate server password.",15,MUTED);
+        action("Open web Admin portal",false,()->openWebPortal("?admin=1"));
         action("Download blank question template (.csv)",false,()->{
             Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT); intent.addCategory(Intent.CATEGORY_OPENABLE);
             intent.setType("text/csv"); intent.putExtra(Intent.EXTRA_TITLE,"exam-maker-question-template.csv");
