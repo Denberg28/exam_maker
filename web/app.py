@@ -2,7 +2,6 @@
 import io
 import json
 import os
-from pathlib import Path
 from urllib.parse import urlencode
 
 import qrcode
@@ -58,18 +57,24 @@ def admin_page():
             st.error(str(exc))
     if not PUBLIC_URL:
         st.warning("Set EXAM_PUBLIC_URL to the reachable HTTPS or LAN URL before sharing QR links.")
-    for session in list_sessions(DB):
-        with st.expander(f"{session['label']} • {session['title']} • {session['completed']} completed • {'open' if session['active'] else 'closed'}", expanded=session["code"] == st.session_state.get("created_code")):
-            if PUBLIC_URL:
-                link = PUBLIC_URL + "/?" + urlencode({"session": session["code"]})
-                st.code(link)
-                st.image(qr_png(link), caption="Scan with an Android phone or desktop browser", width=240)
-            if st.button("Close session" if session["active"] else "Reopen session", key="toggle_" + session["code"]):
-                set_session_active(DB, session["code"], not session["active"])
-                st.rerun()
+    sessions = list_sessions(DB)
+    if sessions:
+        selected_code = st.selectbox("Manage session", [s["code"] for s in sessions],
+                                     format_func=lambda code: next(s["label"] + " • " + s["title"] for s in sessions if s["code"] == code))
+        session = next(s for s in sessions if s["code"] == selected_code)
+        st.caption(f"{session['completed']} completed • {'open' if session['active'] else 'closed'}")
+        if PUBLIC_URL:
+            link = PUBLIC_URL + "/?" + urlencode({"session": session["code"]})
+            st.code(link)
+            st.image(qr_png(link), caption="Scan with an Android phone or desktop browser", width=240)
+        if st.button("Close session" if session["active"] else "Reopen session", key="toggle_" + session["code"]):
+            set_session_active(DB, session["code"], not session["active"])
+            st.rerun()
+        if st.checkbox("Prepare this session's Excel export"):
             rows = results(DB, session["code"])
-            st.download_button("Export session results (.xlsx)", export_xlsx(rows), file_name="results-" + session["code"] + ".xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", key="export_" + session["code"])
-    st.download_button("Export all results (.xlsx)", export_xlsx(results(DB)), file_name="exam-results-all.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+            st.download_button("Export session results (.xlsx)", export_xlsx(rows), file_name="results-" + session["code"] + ".xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    if st.checkbox("Prepare all-results Excel export"):
+        st.download_button("Export all results (.xlsx)", export_xlsx(results(DB)), file_name="exam-results-all.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 
 def candidate_page(code):

@@ -8,6 +8,9 @@ import android.database.sqlite.SQLiteOpenHelper;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
 
 public final class ExamStore extends SQLiteOpenHelper {
     public static final class SetRow {
@@ -33,10 +36,10 @@ public final class ExamStore extends SQLiteOpenHelper {
     }
     @Override public void onUpgrade(SQLiteDatabase db,int oldVersion,int newVersion) { throw new IllegalStateException("Database migration required"); }
     public long addSet(String name) {
-        ContentValues v=new ContentValues(); v.put("name",required(name)); return getWritableDatabase().insertOrThrow("sets",null,v);
+        ContentValues v=new ContentValues(); v.put("name",required(name,200)); return getWritableDatabase().insertOrThrow("sets",null,v);
     }
     public void renameSet(long id,String name) {
-        ContentValues v=new ContentValues(); v.put("name",required(name));
+        ContentValues v=new ContentValues(); v.put("name",required(name,200));
         if(getWritableDatabase().update("sets",v,"id=?",new String[]{String.valueOf(id)})!=1) throw new IllegalArgumentException("Set not found");
     }
     public void deleteSet(long id) { getWritableDatabase().delete("sets","id=?",new String[]{String.valueOf(id)}); }
@@ -60,19 +63,29 @@ public final class ExamStore extends SQLiteOpenHelper {
         return rows;
     }
     public long saveQuestion(long setId,long id,String prompt,List<String> options,int correct,String explanation) {
-        ExamEngine.Question q=new ExamEngine.Question(id>0?String.valueOf(id):"new",required(prompt),options,correct,explanation==null?"":explanation.trim());
-        // Explanations are optional for administered tests; the engine requires nonempty metadata.
-        ExamEngine.validate(java.util.Collections.singletonList(new ExamEngine.Question(q.id,q.prompt,q.options,q.correct,q.explanation)));
+        if(options==null || options.size()!=4 || options.stream().anyMatch(o->o==null || o.trim().isEmpty() || o.trim().length()>500))
+            throw new IllegalArgumentException("Four options are required (max 500 characters each)");
+        ExamEngine.Question q=new ExamEngine.Question(id>0?String.valueOf(id):"new",required(prompt,2000),options,correct,explanation==null?"":explanation.trim());
+        if(q.explanation.length()>2000) throw new IllegalArgumentException("Explanation exceeds 2000 characters");
+        ExamEngine.validate(java.util.Collections.singletonList(q));
+        try(Cursor c=getReadableDatabase().rawQuery("SELECT id FROM questions WHERE set_id=? AND LOWER(TRIM(prompt))=LOWER(?) AND id<>? LIMIT 1",new String[]{String.valueOf(setId),q.prompt,String.valueOf(id)})) {
+            if(c.moveToFirst()) throw new IllegalArgumentException("This question already exists in the set");
+        }
         ContentValues v=new ContentValues(); v.put("set_id",setId); v.put("prompt",q.prompt);
         for(int i=0;i<4;i++) v.put(new String[]{"a","b","c","d"}[i],q.options.get(i).trim());
         v.put("correct",correct); v.put("explanation",q.explanation);
-        if(id<=0) return getWritableDatabase().insertOrThrow("questions",null,v);
+        if(id<=0) {
+            try(Cursor c=getReadableDatabase().rawQuery("SELECT COUNT(*) FROM questions WHERE set_id=?",new String[]{String.valueOf(setId)})) {
+                c.moveToFirst(); if(c.getInt(0)>=500) throw new IllegalArgumentException("Set cannot exceed 500 questions");
+            }
+            return getWritableDatabase().insertOrThrow("questions",null,v);
+        }
         if(getWritableDatabase().update("questions",v,"id=? AND set_id=?",new String[]{String.valueOf(id),String.valueOf(setId)})!=1) throw new IllegalArgumentException("Question not found");
         return id;
     }
     public void deleteQuestion(long setId,long id) { getWritableDatabase().delete("questions","id=? AND set_id=?",new String[]{String.valueOf(id),String.valueOf(setId)}); }
     public void record(String attemptId,String date,String name,String identifier,String set,int score,int total) {
-        ContentValues v=new ContentValues(); v.put("attempt_id",attemptId); v.put("created_at",date); v.put("examiner_name",required(name)); v.put("examiner_id",required(identifier));
+        ContentValues v=new ContentValues(); v.put("attempt_id",attemptId); v.put("created_at",date); v.put("examiner_name",required(name,200)); v.put("examiner_id",required(identifier,200));
         v.put("set_name",set); v.put("score",score); v.put("total",total);
         getWritableDatabase().insertWithOnConflict("results",null,v,SQLiteDatabase.CONFLICT_IGNORE);
     }
@@ -83,8 +96,51 @@ public final class ExamStore extends SQLiteOpenHelper {
         }
         return rows;
     }
-    private static String required(String s) {
-        if(s==null || s.trim().isEmpty() || s.trim().length()>200) throw new IllegalArgumentException("A value is required (maximum 200 characters)");
+    public long importQuestions(Long existingSetId,String newName,List<CsvTemplate.Row> rows) {
+        if(rows==null || rows.isEmpty() || rows.size()>CsvTemplate.MAX_QUESTIONS) throw new IllegalArgumentException("Import 1 to 500 questions");
+        SQLiteDatabase db=getWritableDatabase();
+        db.beginTransaction();
+        try {
+            long setId;
+            if(existingSetId==null) {
+                ContentValues set=new ContentValues(); set.put("name",required(newName,200));
+                setId=db.insertOrThrow("sets",null,set);
+            } else {
+                setId=existingSetId;
+                try(Cursor c=db.rawQuery("SELECT id FROM sets WHERE id=?",new String[]{String.valueOf(setId)})) {
+                    if(!c.moveToFirst()) throw new IllegalArgumentException("Target set no longer exists");
+                }
+            }
+            Set<String> prompts=new HashSet<>();
+            try(Cursor c=db.rawQuery("SELECT prompt FROM questions WHERE set_id=?",new String[]{String.valueOf(setId)})) {
+                while(c.moveToNext()) prompts.add(c.getString(0).trim().toLowerCase(Locale.ROOT));
+            }
+            try(Cursor c=db.rawQuery("SELECT COUNT(*) FROM questions WHERE set_id=?",new String[]{String.valueOf(setId)})) {
+                c.moveToFirst(); if(c.getInt(0)+rows.size()>500) throw new IllegalArgumentException("Set cannot exceed 500 questions");
+            }
+            for(CsvTemplate.Row row:rows) {
+                if(!prompts.add(row.prompt.trim().toLowerCase(Locale.ROOT)))
+                    throw new IllegalArgumentException("Duplicate question: "+row.prompt);
+                ContentValues values=new ContentValues(); values.put("set_id",setId); values.put("prompt",required(row.prompt,2000));
+                for(int i=0;i<4;i++) values.put(new String[]{"a","b","c","d"}[i],required(row.options.get(i),500));
+                values.put("correct",row.correct); values.put("explanation",row.explanation);
+                db.insertOrThrow("questions",null,values);
+            }
+            db.setTransactionSuccessful(); return setId;
+        } finally { db.endTransaction(); }
+    }
+    public int resultCount() {
+        try(Cursor c=getReadableDatabase().rawQuery("SELECT COUNT(*) FROM results",null)) { c.moveToFirst(); return c.getInt(0); }
+    }
+    public List<ResultRow> recentResults(int limit) {
+        List<ResultRow> rows=new ArrayList<>();
+        try(Cursor c=getReadableDatabase().rawQuery("SELECT created_at,examiner_name,examiner_id,set_name,score,total FROM results ORDER BY created_at DESC LIMIT ?",new String[]{String.valueOf(limit)})) {
+            while(c.moveToNext()) rows.add(new ResultRow(c.getString(0),c.getString(1),c.getString(2),c.getString(3),c.getInt(4),c.getInt(5)));
+        }
+        return rows;
+    }
+    private static String required(String s,int max) {
+        if(s==null || s.trim().isEmpty() || s.trim().length()>max) throw new IllegalArgumentException("A value is required (maximum "+max+" characters)");
         return s.trim();
     }
 }

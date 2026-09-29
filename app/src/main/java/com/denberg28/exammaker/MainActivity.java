@@ -9,7 +9,6 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.view.Gravity;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -36,7 +35,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
 public final class MainActivity extends Activity {
-    private static final int EXPORT_REQUEST=42, SET_EXPORT_REQUEST=43;
+    private static final int EXPORT_REQUEST=42, SET_EXPORT_REQUEST=43, TEMPLATE_REQUEST=44, IMPORT_REQUEST=45;
     private static final int INK=Color.rgb(23,35,52), MUTED=Color.rgb(95,108,124);
     private static final int ACCENT=Color.rgb(36,91,198), SURFACE=Color.WHITE;
     private SharedPreferences prefs,adminPrefs;
@@ -51,6 +50,8 @@ public final class MainActivity extends Activity {
     private long blockedUntil;
     private EditText nameInput,idInput;
     private long pendingSetExportId;
+    private List<CsvTemplate.Row> pendingImportRows;
+    private boolean importBusy;
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         prefs=getSharedPreferences("exam_state",MODE_PRIVATE);
@@ -138,23 +139,28 @@ public final class MainActivity extends Activity {
         b.setTextColor(primary?Color.WHITE:INK); b.setBackgroundTintList(null);
         b.setBackground(shape(primary?ACCENT:SURFACE,primary?0:Color.rgb(218,226,237)));
         b.setPadding(dp(20),dp(12),dp(20),dp(12));
-        LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(-1,dp(58)); params.bottomMargin=dp(12);
+        LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(-1,-2); params.bottomMargin=dp(12);
+        b.setMinHeight(dp(58));
         content.addView(b,params); b.setOnClickListener(v->click.run());
     }
     private EditText field(String hint,String value) {
         EditText e=new EditText(this); e.setSingleLine(true); e.setTextSize(16); e.setHint(hint); e.setText(value);
         e.setPadding(dp(16),dp(12),dp(16),dp(12)); e.setBackground(shape(SURFACE,Color.rgb(218,226,237)));
-        LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(-1,dp(56)); params.bottomMargin=dp(12); content.addView(e,params); return e;
+        LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(-1,-2); params.bottomMargin=dp(12);
+        e.setMinHeight(dp(56)); e.setContentDescription(hint); content.addView(e,params); return e;
     }
     private void choice(String text,boolean selected,Runnable click) {
-        TextView v=new TextView(this); v.setText(text); v.setTextSize(16); v.setTextColor(INK); v.setGravity(Gravity.CENTER_VERTICAL);
+        Button v=new Button(this); v.setAllCaps(false); v.setText(text); v.setTextSize(16); v.setTextColor(INK); v.setGravity(Gravity.CENTER_VERTICAL);
+        v.setBackgroundTintList(null);
         v.setBackground(shape(selected?Color.rgb(232,239,255):SURFACE,selected?ACCENT:Color.rgb(218,226,237)));
-        v.setPadding(dp(20),dp(16),dp(20),dp(16));
+        v.setPadding(dp(20),dp(16),dp(20),dp(16)); v.setContentDescription(text+(selected?", selected":""));
         LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(-1,-2); params.bottomMargin=dp(12);
-        content.addView(v,params); v.setMinHeight(dp(62)); if(click!=null) v.setOnClickListener(w->click.run());
+        content.addView(v,params); v.setMinHeight(dp(62));
+        if(click!=null) v.setOnClickListener(w->click.run()); else v.setClickable(false);
     }
     private void error(String message) { Toast.makeText(this,message,Toast.LENGTH_LONG).show(); }
     private void home() {
+        adminUnlocked=false;
         screen(); heading("Exam Maker");
         label("Enter examiner details, then choose a test set.",16,MUTED);
         nameInput=field("Examiner name",examinerName==null?"":examinerName);
@@ -167,6 +173,12 @@ public final class MainActivity extends Activity {
         label("Bundled sample questions are for testing only, not official CAAP content.",14,MUTED);
     }
     private void start(ExamStore.SetRow set) {
+        if(exam!=null && !exam.finished()) {
+            new AlertDialog.Builder(this).setMessage("Start a new exam? The unfinished attempt will be replaced.")
+                .setNegativeButton("Keep current",null).setPositiveButton("Start new",(dialog,which)->begin(set)).show();
+        } else begin(set);
+    }
+    private void begin(ExamStore.SetRow set) {
         String name=nameInput.getText().toString().trim(),id=idInput.getText().toString().trim();
         if(name.isEmpty() || id.isEmpty() || name.length()>200 || id.length()>200) { error("Enter examiner name and ID (up to 200 characters each)."); return; }
         List<ExamStore.QuestionRow> rows=store.questions(set.id);
@@ -247,15 +259,35 @@ public final class MainActivity extends Activity {
             action("Create",true,()->{ try { editSet(store.addSet(input.getText().toString())); } catch(Exception ex) { error("Name is required and must be unique."); } });
             action("Cancel",false,()->adminHome());
         });
+        action("Download blank question template (.csv)",false,()->{
+            Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT); intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("text/csv"); intent.putExtra(Intent.EXTRA_TITLE,"exam-maker-question-template.csv");
+            startActivityForResult(intent,TEMPLATE_REQUEST);
+        });
+        action("Import completed question template (.csv)",false,()->{
+            Intent intent=new Intent(Intent.ACTION_OPEN_DOCUMENT); intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("*/*"); intent.putExtra(Intent.EXTRA_MIME_TYPES,new String[]{"text/csv","text/comma-separated-values","application/vnd.ms-excel","text/plain"});
+            startActivityForResult(intent,IMPORT_REQUEST);
+        });
+        label("Fill the downloaded CSV in Excel or a text editor. One question per row; correct_option is A, B, C, or D. Import into a new or existing set.",14,MUTED);
         action("Results and Excel export",false,()->adminResults());
         action("Lock admin",false,()->{ adminUnlocked=false; home(); });
     }
-    private void editSet(long setId) {
+    private void editSet(long setId) { editSet(setId,0); }
+    private void editSet(long setId,int page) {
         if(!adminUnlocked) { adminGate(); return; }
         String name; try { name=store.setName(setId); } catch(Exception ex) { adminHome(); return; }
         screen(); heading(name); EditText input=field("Test set name",name);
         action("Rename test set",false,()->{ try { store.renameSet(setId,input.getText().toString()); editSet(setId); } catch(Exception ex) { error("Name is required and must be unique."); } });
-        for(ExamStore.QuestionRow row:store.questions(setId)) action(row.question.prompt,false,()->editQuestion(setId,row));
+        List<ExamStore.QuestionRow> questions=store.questions(setId);
+        int maxPage=questions.isEmpty()?0:(questions.size()-1)/30;
+        int currentPage=Math.min(page,maxPage);
+        label(questions.size()+" questions • page "+(currentPage+1)+" of "+(maxPage+1),15,MUTED);
+        for(int i=currentPage*30;i<Math.min((currentPage+1)*30,questions.size());i++) {
+            ExamStore.QuestionRow row=questions.get(i); action(row.question.prompt,false,()->editQuestion(setId,row));
+        }
+        if(currentPage>0) action("Previous questions",false,()->editSet(setId,currentPage-1));
+        if(currentPage<maxPage) action("Next questions",false,()->editSet(setId,currentPage+1));
         action("Add question",true,()->editQuestion(setId,null));
         action("Export set for web QR session (.json)",false,()->{
             if(store.questions(setId).isEmpty()) { error("Add questions before exporting."); return; }
@@ -271,6 +303,7 @@ public final class MainActivity extends Activity {
         if(!adminUnlocked) { adminGate(); return; }
         screen(); heading(row==null?"Add question":"Edit question");
         EditText prompt=field("Question",row==null?"":row.question.prompt);
+        prompt.setSingleLine(false); prompt.setMinHeight(dp(112)); prompt.setGravity(Gravity.TOP);
         EditText[] options=new EditText[4]; for(int i=0;i<4;i++) options[i]=field("Option "+(char)('A'+i),row==null?"":row.question.options.get(i));
         label("Correct option (admin only)",15,MUTED);
         Spinner correct=new Spinner(this); correct.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"A","B","C","D"}));
@@ -279,7 +312,7 @@ public final class MainActivity extends Activity {
             try {
                 List<String> choices=new ArrayList<>(); for(EditText e:options) choices.add(e.getText().toString().trim());
                 store.saveQuestion(setId,row==null?0:row.id,prompt.getText().toString(),choices,correct.getSelectedItemPosition(),""); editSet(setId);
-            } catch(Exception ex) { error("Complete the question and four distinct options."); }
+            } catch(Exception ex) { error("Complete the question and four distinct options. Limits: question 2000, option 500 characters."); }
         });
         if(row!=null) action("Delete question",false,()->confirm("Delete this question?",()->{ store.deleteQuestion(setId,row.id); editSet(setId); }));
         action("Back",false,()->editSet(setId));
@@ -289,8 +322,8 @@ public final class MainActivity extends Activity {
     }
     private void adminResults() {
         if(!adminUnlocked) { adminGate(); return; }
-        screen(); heading("Saved results"); List<ExamStore.ResultRow> rows=store.results();
-        label(rows.size()+" completed attempts stored on this device.",16,MUTED);
+        screen(); heading("Saved results"); List<ExamStore.ResultRow> rows=store.recentResults(30);
+        label(store.resultCount()+" completed attempts stored on this device. Latest 30 shown; export includes all.",16,MUTED);
         action("Export Excel (.xlsx)",true,()->{
             Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT); intent.addCategory(Intent.CATEGORY_OPENABLE);
             intent.setType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
@@ -299,13 +332,64 @@ public final class MainActivity extends Activity {
         for(ExamStore.ResultRow r:rows) label(r.date+" UTC  •  "+r.name+" ("+r.identifier+")\n"+r.set+"  •  "+r.score+" / "+r.total,15,INK);
         action("Back",false,()->adminHome());
     }
+    private void importPreview() {
+        if(!adminUnlocked || pendingImportRows==null) { adminGate(); return; }
+        screen(); heading("Review question import");
+        label(pendingImportRows.size()+" validated questions. Import is all-or-nothing.",16,MUTED);
+        for(int i=0;i<Math.min(3,pendingImportRows.size());i++) label("• "+pendingImportRows.get(i).prompt,15,INK);
+        label("Destination",15,MUTED);
+        List<ExamStore.SetRow> sets=store.sets(); List<String> choices=new ArrayList<>(); choices.add("Create new test set");
+        for(ExamStore.SetRow set:sets) choices.add(set.name+" ("+set.count+" questions)");
+        Spinner target=new Spinner(this); target.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,choices));
+        content.addView(target); EditText newName=field("New test set name (only for new set)","");
+        action("Import questions",true,()->{
+            if(importBusy) return;
+            int selected=target.getSelectedItemPosition();
+            if(selected==0 && newName.getText().toString().trim().isEmpty()) { error("Name the new test set."); return; }
+            Long existing=selected==0?null:sets.get(selected-1).id;
+            String name=newName.getText().toString(); List<CsvTemplate.Row> rows=pendingImportRows;
+            importBusy=true;
+            new Thread(()->{
+                try {
+                    long id=store.importQuestions(existing,name,rows);
+                    runOnUiThread(()->{ importBusy=false; if(!isFinishing() && !isDestroyed()) { pendingImportRows=null; error("Imported "+rows.size()+" questions."); editSet(id); } });
+                } catch(Exception ex) {
+                    runOnUiThread(()->{ importBusy=false; if(!isFinishing() && !isDestroyed()) error("Import failed; nothing changed: "+ex.getMessage()); });
+                }
+            }).start();
+        });
+        action("Cancel",false,()->{ pendingImportRows=null; adminHome(); });
+    }
     @Override protected void onActivityResult(int requestCode,int resultCode,Intent data) {
         super.onActivityResult(requestCode,resultCode,data);
         if(resultCode!=RESULT_OK || data==null || data.getData()==null || !adminUnlocked) return;
         if(requestCode==EXPORT_REQUEST) {
+            android.net.Uri uri=data.getData();
+            new Thread(()->{
+                try(OutputStream out=getContentResolver().openOutputStream(uri)) {
+                    if(out==null) throw new IllegalStateException(); WorkbookWriter.write(out,store.results());
+                    runOnUiThread(()->{ if(!isFinishing() && !isDestroyed()) error("Excel file saved."); });
+                } catch(Exception ex) {
+                    runOnUiThread(()->{ if(!isFinishing() && !isDestroyed()) error("Export failed. Choose another location."); });
+                }
+            }).start();
+        } else if(requestCode==TEMPLATE_REQUEST) {
             try(OutputStream out=getContentResolver().openOutputStream(data.getData())) {
-                if(out==null) throw new IllegalStateException(); WorkbookWriter.write(out,store.results()); error("Excel file saved.");
-            } catch(Exception ex) { error("Export failed. Choose another location."); }
+                if(out==null) throw new IllegalStateException();
+                out.write(CsvTemplate.HEADER.getBytes(StandardCharsets.UTF_8));
+                error("Blank template saved. Fill it and import through Admin.");
+            } catch(Exception ex) { error("Could not save template."); }
+        } else if(requestCode==IMPORT_REQUEST) {
+            android.net.Uri uri=data.getData();
+            new Thread(()->{
+                try(InputStream input=getContentResolver().openInputStream(uri)) {
+                    if(input==null) throw new IllegalArgumentException("Could not read the selected file");
+                    List<CsvTemplate.Row> rows=CsvTemplate.read(input);
+                    runOnUiThread(()->{ if(!isFinishing() && !isDestroyed() && adminUnlocked) { pendingImportRows=rows; importPreview(); } });
+                } catch(Exception ex) {
+                    runOnUiThread(()->{ if(!isFinishing() && !isDestroyed()) error("Import rejected: "+ex.getMessage()); });
+                }
+            }).start();
         } else if(requestCode==SET_EXPORT_REQUEST) {
             try(OutputStream out=getContentResolver().openOutputStream(data.getData())) {
                 if(out==null) throw new IllegalStateException();

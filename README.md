@@ -1,4 +1,4 @@
-# Exam Maker 0.5.0
+# Exam Maker 0.6.0
 
 Portrait Android practice exam that works offline. This build contains ten sample general knowledge questions, not CAAP questions or official exam material.
 
@@ -9,6 +9,12 @@ Open app → start exam → tap one choice → see the locked selection and curr
 On first use, open Admin and create a local password (at least 8 characters). Admin can add, rename, or delete test sets; add, edit, or delete four-option questions; and export completed attempts to an actual `.xlsx` workbook using the Android document picker. The bundled sample set is imported once. Admin access and all data remain on this device. The password is salted and derived with PBKDF2; there is no online recovery. Removing app data deletes the sets, results, and admin account. Results are not encrypted at rest beyond Android device storage protection.
 
 Before a new attempt, the examiner enters a name and ID. The attempt captures a snapshot of its questions so admin edits cannot change it mid-exam. Completed results are saved once per attempt, even after reopening the result screen. Export includes UTC date, examiner name/ID, set name, score, maximum, and percentage. Handle exported workbooks as personal data.
+
+## Question template and admin import
+
+Admin can add one question directly from a test set. For bulk entry, tap **Download blank question template (.csv)** in Android Admin and save the file. Open it in Excel or a text editor, add one question per row, then save as **CSV UTF-8**. The columns are `question,option_a,option_b,option_c,option_d,correct_option,explanation`. Put `A`, `B`, `C`, or `D` in `correct_option`. Explanations may be blank and are never shown after submission. Keep the header unchanged. Quoted commas, quotes, and line breaks are supported.
+
+Tap **Import completed question template (.csv)**, review the validated question count and sample prompts, then choose **Create new test set** and enter a name or choose an existing set. Import accepts up to 500 questions and 2 MB per file. It rejects incomplete, duplicate, or malformed rows; database changes are atomic. Existing attempts retain their question snapshots. Sets can contain at most 500 questions. The template CSV is for editing questions; the XLSX export is for results.
 
 ## Web QR sessions (self-hosted)
 
@@ -43,7 +49,7 @@ Install JDK 17, Android SDK platform 35 and build-tools 35.0.0, and Gradle 8.11.
 Edit `app/src/main/assets/questions.json`. Each question needs a stable unique `id`, nonempty `prompt` and `explanation`, exactly 4 distinct options, and a zero-based `correct` index. Increment `bankId` when editing published questions, so saved attempts are discarded safely. Content is bundled in APK, not fetched from a server. Question provenance and subject review must precede a CAAP-focused bank.
 
 ## Installation and upgrade
-For private testing, download the successful `exam-maker-v0.5.0-debug-apk` CI artifact, extract `app-debug.apk`, and install it on Android 8 or later. Upgrade using a new APK with the same application ID and signing key and a higher versionCode. GitHub Actions debug signing keys are ephemeral across runners, so a later CI debug artifact may require uninstalling the earlier app, which deletes its saved attempt. Use a stable private signing key for continuous upgrades. For rollback, reinstall an earlier same-key APK after removing the newer version; Android normally rejects version downgrades in place. Save any wanted results before uninstalling.
+For private testing, download the successful `exam-maker-v0.6.0-debug-apk` CI artifact, extract `app-debug.apk`, and install it on Android 8 or later. Upgrade using a new APK with the same application ID and signing key and a higher versionCode. GitHub Actions debug signing keys are ephemeral across runners, so a later CI debug artifact may require uninstalling the earlier app, which deletes its saved attempt. Use a stable private signing key for continuous upgrades. For rollback, reinstall an earlier same-key APK after removing the newer version; Android normally rejects version downgrades in place. Save any wanted results before uninstalling.
 
 ## Known limits and next milestone
-No verified CAAP question bank, multi-admin roles, cloud sync, timed mode, remote database, password recovery, or stable production signing yet. Next: review licensed question provenance and add a versioned subject bank, then set up durable signing and test on a physical Android device.
+No verified CAAP question bank, multi-admin roles, automatic Android/web sync, timed mode, password recovery, or stable production signing yet. Physical device testing of file pickers, accessibility, and import remains pending. Next: review licensed question provenance and add a versioned subject bank, then set up durable signing and test on a physical Android device.

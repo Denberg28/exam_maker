@@ -1,5 +1,5 @@
 # Project continuity
-- Android Java, portrait-only offline MVP; applicationId com.denberg28.exammaker, version 0.5.0 (code 5).
+- Android Java, portrait-only offline MVP; applicationId com.denberg28.exammaker, version 0.6.0 (code 6).
 - Bank is bundled JSON at app/src/main/assets/questions.json; sample general knowledge only, not CAAP content.
 - Validate bank with python3 tools/validate_bank.py before changing or releasing it.
 - Correct options are original indices. ExamEngine shuffles questions and visible options using a saved seed; persistence stores the seed and visible selection indices. Preserve bank order and content under a bankId, or increment bankId to invalidate a saved attempt.
@@ -11,3 +11,5 @@
 - Completed attempts are deduplicated by UUID. Keep existing data and schema migrations when changing the database version.
 - Web companion: `web/app.py` Streamlit UI, `web/core.py` SQLite session/attempt logic. Android exports a prepared set JSON; web admin imports it, creates independent sessions, and shares QR URL. `EXAM_PUBLIC_URL` must be reachable from candidate devices. Web DB is separate from Android local DB.
 - Multi-session candidate attempts use server SQLite transactions and random attempt IDs in query parameters; do not expose server DB. Web admin password comes from `EXAM_ADMIN_PASSWORD` environment variable; use HTTPS and a rate-limiting reverse proxy for Internet hosting.
+- `CsvTemplate` is the Android bulk-entry contract: strict CSV UTF-8 header, correct option A-D, 2 MB/500-row limit. Android Admin previews and imports into a new or existing set using `ExamStore.importQuestions` in one transaction. Keep CSV columns aligned with template docs and tests.
+- Admin question list is paged at 30 and result list shows latest 30, with full XLSX export. Home locks admin and prompts before replacing an unfinished attempt. Choice controls are native buttons for accessibility.

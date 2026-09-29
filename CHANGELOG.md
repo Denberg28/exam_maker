@@ -1,4 +1,9 @@
 # Changelog
+## 0.6.0 — 2026-09-29
+- Download CSV question template; bulk import to a named new set or existing set with preview and atomic validation.
+- Page Android question/result lists, improve choice accessibility and button sizing, confirm replacement of unfinished attempts.
+- Render only the selected web session and prepare exports on demand.
+
 ## 0.5.0 — 2026-09-29
 - Center final score on Android.
 - Export prepared Android test sets to JSON for the Streamlit portal.

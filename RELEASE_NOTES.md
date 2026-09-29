@@ -1,4 +1,4 @@
-# Exam Maker v0.5.0 private testing build
+# Exam Maker v0.6.0 private testing build
 
 Portrait offline sample practice exam with four choices per question. Ten general knowledge questions, four options each. Current score starts at ten and decreases for incorrect answers; correct options are not revealed after submission. This is not a CAAP question bank or official examination app.
 
@@ -16,3 +16,6 @@ Create a local admin password at first use, manage test sets and questions, and 
 
 ## Web QR sessions
 The final score is centered in the APK. Android admin can export a prepared set to JSON, then upload it to the self-hosted Streamlit portal. The portal creates independent sessions and QR links for Android or desktop browsers. Configure the reachable URL and admin password before sharing links. The server and Android device maintain separate databases.
+
+## Admin question template
+Download the blank CSV template from Android Admin. Fill one row per question in Excel (save as CSV UTF-8), import it, review the preview, and choose a new or existing test set. Incorrect rows reject the entire import. The Admin question list is paged; full result export remains available. Starting another exam now confirms before replacing unfinished progress.
