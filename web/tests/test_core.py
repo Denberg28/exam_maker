@@ -62,6 +62,20 @@ class SessionTests(unittest.TestCase):
             view = attempt_view(self.db, aid)
             submit_answer(self.db, aid, view["index"], 0)
         self.assertEqual(1, len(results(self.db, code)))
+    def test_restart_preserves_score_and_duplicate_submission_is_rejected(self):
+        code = create_session(self.db, BANK, "Morning")
+        set_session_active(self.db, code, True)
+        aid = start_attempt(self.db, code, "A", "1")
+        first = attempt_view(self.db, aid)
+        submit_answer(self.db, aid, first["index"], 0)
+        initialize(self.db)  # a new app process opens the existing database
+        resumed = attempt_view(self.db, aid)
+        self.assertEqual(1, resumed["index"])
+        with self.assertRaises(ValueError):
+            submit_answer(self.db, aid, first["index"], 1)
+        self.assertEqual(resumed["score"], attempt_view(self.db, aid)["score"])
+        submit_answer(self.db, aid, resumed["index"], 0)
+        self.assertEqual(1, len(results(self.db, code)))
     def test_rejects_bad_bank(self):
         bad = json.loads(json.dumps(BANK)); bad["questions"][0]["options"] = ["A", "B"]
         with self.assertRaises(ValueError): create_session(self.db, bad, "Bad")

@@ -1,5 +1,5 @@
 # Project continuity
-- Android Java, portrait-only offline MVP with optional web portal handoff; applicationId com.denberg28.exammaker, version 0.7.0 (code 7).
+- Android Java, portrait-only offline MVP with optional web portal handoff; applicationId com.denberg28.exammaker, version 0.8.0 (code 8).
 - Bank is bundled JSON at app/src/main/assets/questions.json; sample general knowledge only, not CAAP content.
 - Validate bank with python3 tools/validate_bank.py before changing or releasing it.
 - Correct options are original indices. ExamEngine shuffles questions and visible options using a saved seed; persistence stores the seed and visible selection indices. Preserve bank order and content under a bankId, or increment bankId to invalidate a saved attempt.
@@ -16,3 +16,4 @@
 - Streamlit Cloud entry point is `web/app.py` on `main`, dependencies `web/requirements.txt`; see `web/DEPLOY.md`. Local SQLite on Community Cloud is ephemeral, so never use that deployment for real examiner records without a durable database migration. Keep Streamlit secrets out of git.
 - Android portal handoff uses `https://exammaker.streamlit.app/` in `MainActivity`; home opens `?join=1`, authenticated local Admin opens `?admin=1`. Web Admin has a separate server password. Update this URL deliberately if deployment changes.
 - Web sessions created after the draft/publish update start inactive. Admin must publish before examiner QR/listing; closing blocks new attempts while existing attempts finish and results remain exportable. Existing sessions retain their active flag. The production Streamlit secret `EXAM_ADMIN_PASSWORD` must be configured in its dashboard, never in source.
+- v0.8.0 review: WAL mode is set during web DB initialization; tests cover draft/publish, concurrent attempts, restart/resume, one-time answer submission, and XLSX formula text. Hosted Community Cloud SQLite remains ephemeral.

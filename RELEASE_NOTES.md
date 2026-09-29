@@ -1,7 +1,7 @@
-# Exam Maker v0.7.0 private testing build
+# Exam Maker v0.8.0 private testing build
 
-## New in 0.7.0
-Android home opens the hosted exam start page in a browser. Android Admin opens the web Admin portal, where an exported test-set JSON can be uploaded to create QR sessions. The Streamlit landing page shows a QR code to the open-session list. Online and offline results remain separate.
+## New in 0.8.0
+Web Admin now creates drafts that require explicit publication. Results remain exportable after a session closes. Database access was reviewed for concurrent attempts and restart/resume; a hosting data-retention warning appears in Admin. Android still opens the web portal while keeping offline exams and results separate.
 
 Portrait offline sample practice exam with four choices per question. Ten general knowledge questions, four options each. Current score starts at ten and decreases for incorrect answers; correct options are not revealed after submission. This is not a CAAP question bank or official examination app.
 
@@ -9,7 +9,7 @@ Portrait offline sample practice exam with four choices per question. Ten genera
 Download `app-debug.apk` below and install on Android 8 or newer. The APK uses the GitHub runner's debug signing key. Android may request permission to install from your browser or file manager.
 
 ## Upgrade and rollback
-The debug signing key changes between CI runners. Upgrading from v0.6.0 may require uninstalling it first, which erases local sets, admin account, and results unless exported. For rollback, export results, uninstall and reinstall the earlier APK. Do not use this debug build for production distribution.
+The debug signing key changes between CI runners. Upgrading from an earlier CI debug APK may require uninstalling it first, which erases local sets, admin account, and results unless exported. For rollback, export results, uninstall and reinstall the earlier APK. Do not use this debug build for production distribution.
 
 ## Limits
 No physical device test yet. Answers are stored only on-device. No timer, categories, remotely hosted bank, or history. Next milestone: review a sourced CAAP-oriented practice bank and establish stable private signing.

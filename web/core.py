@@ -24,13 +24,13 @@ def connection(path):
     db.row_factory = sqlite3.Row
     db.execute("PRAGMA busy_timeout=15000")
     db.execute("PRAGMA foreign_keys=ON")
-    db.execute("PRAGMA journal_mode=WAL")
     return db
 
 
 def initialize(path):
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     with connection(path) as db:
+        db.execute("PRAGMA journal_mode=WAL")
         db.executescript("""
         CREATE TABLE IF NOT EXISTS sessions (
             code TEXT PRIMARY KEY, label TEXT NOT NULL, title TEXT NOT NULL,

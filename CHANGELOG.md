@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.8.0 — 2026-09-29
+- Reviewed APK set export, local recording, web draft/publish, concurrent attempts and result XLSX export.
+- Set web SQLite WAL mode during initialization instead of on each request and tested restart/resume plus duplicate submission.
+- Showed the web Admin an explicit warning about ephemeral Community Cloud results.
+
 ## 0.7.0 — 2026-09-29
 - Added Android browser handoff to the hosted exam start and web Admin pages, with no new app permissions.
 - Added a landing QR to the Streamlit open-session list and a direct session QR for each prepared set.

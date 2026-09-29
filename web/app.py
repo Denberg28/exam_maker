@@ -65,6 +65,7 @@ def admin_page():
     if st.button("Lock admin"):
         st.session_state.admin_ok = False
         st.rerun()
+    st.warning("This deployment stores sessions and results in a local file. On Streamlit Community Cloud, that file can disappear after a restart or redeploy. Export results promptly; use a durable database before real exams.")
     st.subheader("Create session from prepared test set")
     uploaded = st.file_uploader("Upload a bank JSON exported from the Android admin", type=["json"])
     label = st.text_input("Session name", placeholder="Morning session, Group A")
