@@ -7,7 +7,8 @@ from urllib.parse import urlencode
 import qrcode
 import streamlit as st
 from core import (initialize, create_session, list_sessions, get_session, set_session_active,
-                  start_attempt, attempt_view, submit_answer, results, export_xlsx)
+                  start_attempt, attempt_view, submit_answer, results, export_xlsx,
+                  bank_from_csv, question_template)
 
 DB = os.environ.get("EXAM_DB_PATH", "web/data/exams.sqlite3")
 PUBLIC_URL = os.environ.get("EXAM_PUBLIC_URL", "").rstrip("/")
@@ -67,13 +68,29 @@ def admin_page():
         st.rerun()
     st.warning("This deployment stores sessions and results in a local file. On Streamlit Community Cloud, that file can disappear after a restart or redeploy. Export results promptly; use a durable database before real exams.")
     st.subheader("Create session from prepared test set")
-    uploaded = st.file_uploader("Upload a bank JSON exported from the Android admin", type=["json"])
-    label = st.text_input("Session name", placeholder="Morning session, Group A")
-    if st.button("Create session"):
+    st.write("Download the CSV, add one question per row, and enter A, B, C, or D under correct_option. The explanation column may be blank. Save as CSV UTF-8, then upload it here.")
+    st.download_button("Download question template (.csv)", question_template(),
+                       file_name="question-template.csv", mime="text/csv")
+    uploaded = st.file_uploader("Upload completed CSV or a bank JSON exported from Android", type=["csv", "json"])
+    title = st.text_input("Test set name", placeholder="Aircraft Structures") if uploaded and uploaded.name.lower().endswith(".csv") else ""
+    bank = None
+    if uploaded:
         try:
-            if uploaded is None or len(uploaded.getvalue()) > 2_000_000:
-                raise ValueError("Choose a bank JSON under 2 MB")
-            code = create_session(DB, json.loads(uploaded.getvalue()), label)
+            data = uploaded.getvalue()
+            if len(data) > 2_000_000:
+                raise ValueError("Upload must be under 2 MB")
+            bank = (bank_from_csv(data, title) if uploaded.name.lower().endswith(".csv")
+                    else json.loads(data.decode("utf-8-sig")))
+            if uploaded.name.lower().endswith(".json"):
+                from core import validate_bank
+                bank = validate_bank(bank)
+            st.success(f"Ready: {len(bank['questions'])} questions in {bank['title']}")
+        except (ValueError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+            st.error(str(exc))
+    label = st.text_input("Session name", placeholder="Morning session, Group A")
+    if st.button("Create session", disabled=bank is None):
+        try:
+            code = create_session(DB, bank, label)
             st.success("Draft session created. Review it below, then select Publish session to make it available to examiners.")
             st.session_state.managed_session = code
         except (ValueError, UnicodeDecodeError, json.JSONDecodeError) as exc:
