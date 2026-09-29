@@ -7,3 +7,7 @@ local.properties
 *.jks
 *.keystore
 .env
+web/data/
+web/__pycache__/
+web/tests/__pycache__/
+.venv/

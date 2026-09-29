@@ -4,7 +4,20 @@ on:
   pull_request:
   workflow_dispatch:
 jobs:
+  web-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install web dependencies and test concurrent sessions
+        run: |
+          python -m pip install -r web/requirements.txt
+          python -m py_compile web/core.py web/app.py
+          python -m unittest discover -s web/tests -v
   build:
+    needs: web-test
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -25,7 +38,7 @@ jobs:
         run: python3 tools/validate_bank.py && gradle :app:testDebugUnitTest :app:assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
-          name: exam-maker-v0.4.0-debug-apk
+          name: exam-maker-v0.5.0-debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
       - name: Publish private testing prerelease
@@ -33,4 +46,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create v0.4.0 app/build/outputs/apk/debug/app-debug.apk --prerelease --title "Exam Maker v0.4.0 (testing)" --notes-file RELEASE_NOTES.md
+          gh release create v0.5.0 app/build/outputs/apk/debug/app-debug.apk --prerelease --title "Exam Maker v0.5.0 (testing)" --notes-file RELEASE_NOTES.md

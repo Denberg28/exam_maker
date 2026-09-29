@@ -1,4 +1,9 @@
 # Changelog
+## 0.5.0 — 2026-09-29
+- Center final score on Android.
+- Export prepared Android test sets to JSON for the Streamlit portal.
+- Streamlit admin creates multiple independent QR sessions; candidates take exams in Android and desktop browsers with server-persisted attempts and XLSX result export.
+
 ## 0.4.0 — 2026-09-29
 - Local admin account and editable named test sets with four-choice question CRUD.
 - Examiner name/ID collection, persistent completed results, and XLSX export.

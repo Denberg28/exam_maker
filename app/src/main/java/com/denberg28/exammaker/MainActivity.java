@@ -36,7 +36,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
 public final class MainActivity extends Activity {
-    private static final int EXPORT_REQUEST=42;
+    private static final int EXPORT_REQUEST=42, SET_EXPORT_REQUEST=43;
     private static final int INK=Color.rgb(23,35,52), MUTED=Color.rgb(95,108,124);
     private static final int ACCENT=Color.rgb(36,91,198), SURFACE=Color.WHITE;
     private SharedPreferences prefs,adminPrefs;
@@ -50,6 +50,7 @@ public final class MainActivity extends Activity {
     private int failedLogins;
     private long blockedUntil;
     private EditText nameInput,idInput;
+    private long pendingSetExportId;
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         prefs=getSharedPreferences("exam_state",MODE_PRIVATE);
@@ -198,10 +199,13 @@ public final class MainActivity extends Activity {
         if(exam==null || !exam.finished()) { question(); return; }
         SimpleDateFormat fmt=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss",Locale.US); fmt.setTimeZone(TimeZone.getTimeZone("UTC"));
         store.record(attemptId,fmt.format(new java.util.Date()),examinerName,examinerId,title,exam.score(),exam.items.size());
-        screen(); heading("Exam complete"); label(title+"  •  "+examinerName+" ("+examinerId+")",16,MUTED);
-        label("Final score",16,MUTED); TextView v=label(exam.score()+" / "+exam.items.size(),36,ACCENT); v.setTypeface(null,Typeface.BOLD);
-        label(String.format(Locale.US,"%.0f%%",100.0*exam.score()/exam.items.size()),21,INK);
-        label("The result was saved on this device. A new exam replaces the resumable attempt.",16,MUTED);
+        screen(); content.setGravity(Gravity.CENTER);
+        TextView complete=label("Exam complete",28,INK); complete.setTypeface(null,Typeface.BOLD); complete.setGravity(Gravity.CENTER);
+        label(title+"  •  "+examinerName+" ("+examinerId+")",16,MUTED).setGravity(Gravity.CENTER);
+        label("Final score",16,MUTED).setGravity(Gravity.CENTER);
+        TextView v=label(exam.score()+" / "+exam.items.size(),42,ACCENT); v.setTypeface(null,Typeface.BOLD); v.setGravity(Gravity.CENTER);
+        label(String.format(Locale.US,"%.0f%%",100.0*exam.score()/exam.items.size()),21,INK).setGravity(Gravity.CENTER);
+        label("The result was saved on this device. A new exam replaces the resumable attempt.",16,MUTED).setGravity(Gravity.CENTER);
         action("Home",true,()->home());
     }
     private byte[] derive(String password,byte[] salt) throws Exception {
@@ -253,6 +257,13 @@ public final class MainActivity extends Activity {
         action("Rename test set",false,()->{ try { store.renameSet(setId,input.getText().toString()); editSet(setId); } catch(Exception ex) { error("Name is required and must be unique."); } });
         for(ExamStore.QuestionRow row:store.questions(setId)) action(row.question.prompt,false,()->editQuestion(setId,row));
         action("Add question",true,()->editQuestion(setId,null));
+        action("Export set for web QR session (.json)",false,()->{
+            if(store.questions(setId).isEmpty()) { error("Add questions before exporting."); return; }
+            pendingSetExportId=setId;
+            Intent intent=new Intent(Intent.ACTION_CREATE_DOCUMENT); intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("application/json"); intent.putExtra(Intent.EXTRA_TITLE,"exam-set-"+setId+".json");
+            startActivityForResult(intent,SET_EXPORT_REQUEST);
+        });
         action("Delete test set",false,()->confirm("Delete this test set and all its questions? Saved results remain.",()->{ store.deleteSet(setId); adminHome(); }));
         action("Back",false,()->adminHome());
     }
@@ -290,10 +301,20 @@ public final class MainActivity extends Activity {
     }
     @Override protected void onActivityResult(int requestCode,int resultCode,Intent data) {
         super.onActivityResult(requestCode,resultCode,data);
-        if(requestCode==EXPORT_REQUEST && resultCode==RESULT_OK && data!=null && data.getData()!=null && adminUnlocked) {
+        if(resultCode!=RESULT_OK || data==null || data.getData()==null || !adminUnlocked) return;
+        if(requestCode==EXPORT_REQUEST) {
             try(OutputStream out=getContentResolver().openOutputStream(data.getData())) {
                 if(out==null) throw new IllegalStateException(); WorkbookWriter.write(out,store.results()); error("Excel file saved.");
             } catch(Exception ex) { error("Export failed. Choose another location."); }
+        } else if(requestCode==SET_EXPORT_REQUEST) {
+            try(OutputStream out=getContentResolver().openOutputStream(data.getData())) {
+                if(out==null) throw new IllegalStateException();
+                JSONObject payload=new JSONObject(); payload.put("schema",1); payload.put("title",store.setName(pendingSetExportId));
+                List<ExamEngine.Question> questions=new ArrayList<>();
+                for(ExamStore.QuestionRow row:store.questions(pendingSetExportId)) questions.add(row.question);
+                payload.put("questions",snapshot(questions));
+                out.write(payload.toString().getBytes(StandardCharsets.UTF_8)); error("Set exported. Upload it in the Streamlit admin portal to create a QR session.");
+            } catch(Exception ex) { error("Set export failed. Try another location."); }
         }
     }
     @Override public void onBackPressed() { if(adminUnlocked) adminHome(); else home(); }

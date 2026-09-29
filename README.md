@@ -1,4 +1,4 @@
-# Exam Maker 0.4.0
+# Exam Maker 0.5.0
 
 Portrait Android practice exam that works offline. This build contains ten sample general knowledge questions, not CAAP questions or official exam material.
 
@@ -9,6 +9,24 @@ Open app → start exam → tap one choice → see the locked selection and curr
 On first use, open Admin and create a local password (at least 8 characters). Admin can add, rename, or delete test sets; add, edit, or delete four-option questions; and export completed attempts to an actual `.xlsx` workbook using the Android document picker. The bundled sample set is imported once. Admin access and all data remain on this device. The password is salted and derived with PBKDF2; there is no online recovery. Removing app data deletes the sets, results, and admin account. Results are not encrypted at rest beyond Android device storage protection.
 
 Before a new attempt, the examiner enters a name and ID. The attempt captures a snapshot of its questions so admin edits cannot change it mid-exam. Completed results are saved once per attempt, even after reopening the result screen. Export includes UTC date, examiner name/ID, set name, score, maximum, and percentage. Handle exported workbooks as personal data.
+
+## Web QR sessions (self-hosted)
+
+The Android admin can export a prepared set as JSON. On a reachable computer/server:
+
+```bash
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -r web/requirements.txt
+export EXAM_ADMIN_PASSWORD='choose-a-long-unique-password'
+export EXAM_PUBLIC_URL='http://YOUR-LAN-IP:8501'
+export EXAM_DB_PATH='web/data/exams.sqlite3'
+streamlit run web/app.py --server.address 0.0.0.0 --server.port 8501
+```
+
+Open `EXAM_PUBLIC_URL/?admin=1`, sign in, upload the JSON, name a session, and create it. The portal displays its QR code and link. Open the same URL from an Android or desktop browser on the reachable network. Repeat for as many sessions as needed; each session has an independent code and can be closed to new entrants. Candidate attempts, random order, and results persist in the server's SQLite file. Closing a session does not interrupt existing attempts. Admin can export per-session or all results to XLSX.
+
+`EXAM_PUBLIC_URL` must be reachable by candidate devices. Use an HTTPS endpoint and a reverse proxy with login rate limiting before Internet exposure. Restrict filesystem access to `EXAM_DB_PATH` and back it up; it contains names, IDs, questions, answers, and results. QR links grant entry to a test set, so share them only with intended participants. The Android-local results and web results are separate; the exported set JSON is the bridge. Streamlit session state alone resets with a WebSocket reconnect, so web attempts also use server SQLite and an opaque attempt ID in the browser URL. Keep that URL private. This first iteration does not provide managed hosting, device-level QA, or automatic Android-to-server synchronization.
 
 ## MVP acceptance criteria
 - Invalid bank fails closed instead of presenting questions.
@@ -25,7 +43,7 @@ Install JDK 17, Android SDK platform 35 and build-tools 35.0.0, and Gradle 8.11.
 Edit `app/src/main/assets/questions.json`. Each question needs a stable unique `id`, nonempty `prompt` and `explanation`, exactly 4 distinct options, and a zero-based `correct` index. Increment `bankId` when editing published questions, so saved attempts are discarded safely. Content is bundled in APK, not fetched from a server. Question provenance and subject review must precede a CAAP-focused bank.
 
 ## Installation and upgrade
-For private testing, download the successful `exam-maker-v0.4.0-debug-apk` CI artifact, extract `app-debug.apk`, and install it on Android 8 or later. Upgrade using a new APK with the same application ID and signing key and a higher versionCode. GitHub Actions debug signing keys are ephemeral across runners, so a later CI debug artifact may require uninstalling the earlier app, which deletes its saved attempt. Use a stable private signing key for continuous upgrades. For rollback, reinstall an earlier same-key APK after removing the newer version; Android normally rejects version downgrades in place. Save any wanted results before uninstalling.
+For private testing, download the successful `exam-maker-v0.5.0-debug-apk` CI artifact, extract `app-debug.apk`, and install it on Android 8 or later. Upgrade using a new APK with the same application ID and signing key and a higher versionCode. GitHub Actions debug signing keys are ephemeral across runners, so a later CI debug artifact may require uninstalling the earlier app, which deletes its saved attempt. Use a stable private signing key for continuous upgrades. For rollback, reinstall an earlier same-key APK after removing the newer version; Android normally rejects version downgrades in place. Save any wanted results before uninstalling.
 
 ## Known limits and next milestone
 No verified CAAP question bank, multi-admin roles, cloud sync, timed mode, remote database, password recovery, or stable production signing yet. Next: review licensed question provenance and add a versioned subject bank, then set up durable signing and test on a physical Android device.
