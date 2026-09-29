@@ -1,5 +1,6 @@
 """Persistent exam sessions for the Streamlit portal. No Streamlit dependency here."""
 import io
+import csv
 import json
 import secrets
 import sqlite3
@@ -13,6 +14,49 @@ from openpyxl import Workbook
 
 _random = SystemRandom()
 _write_lock = Lock()
+CSV_HEADER = ["question", "option_a", "option_b", "option_c", "option_d", "correct_option", "explanation"]
+
+
+def question_template():
+    """Same seven-column CSV contract as the Android admin."""
+    out = io.StringIO(newline="")
+    csv.writer(out).writerow(CSV_HEADER)
+    return out.getvalue().encode("utf-8-sig")
+
+
+def bank_from_csv(data, title):
+    if len(data) > 2_000_000:
+        raise ValueError("Template exceeds 2 MB")
+    try:
+        content = data.decode("utf-8-sig")
+    except UnicodeDecodeError as exc:
+        raise ValueError("Save the template as UTF-8 CSV") from exc
+    try:
+        rows = list(csv.reader(io.StringIO(content, newline=""), strict=True))
+    except csv.Error as exc:
+        raise ValueError(f"Invalid CSV: {exc}") from exc
+    if not rows or rows[0] != CSV_HEADER:
+        raise ValueError("Incorrect CSV headings. Download a fresh template.")
+    questions, prompts = [], set()
+    for row_number, row in enumerate(rows[1:], 2):
+        if not any(cell.strip() for cell in row):
+            continue
+        if len(row) != 7:
+            raise ValueError(f"Row {row_number}: expected seven columns")
+        prompt, *rest = [cell.strip() for cell in row]
+        options, answer, explanation = rest[:4], rest[4].upper(), rest[5]
+        if (not prompt or len(prompt) > 2000 or any(not o or len(o) > 500 for o in options)
+                or len(set(options)) != 4 or answer not in "ABCD" or len(answer) != 1
+                or len(explanation) > 2000):
+            raise ValueError(f"Row {row_number}: enter a question, four distinct options, and correct_option A-D")
+        if prompt.casefold() in prompts:
+            raise ValueError(f"Row {row_number}: duplicate question")
+        prompts.add(prompt.casefold())
+        questions.append({"id": str(len(questions) + 1), "prompt": prompt,
+                          "options": options, "correct": "ABCD".index(answer)})
+        if len(questions) > 500:
+            raise ValueError("Template exceeds 500 questions")
+    return validate_bank({"schema": 1, "title": title, "questions": questions})
 
 
 def utc_now():
