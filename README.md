@@ -18,6 +18,8 @@ Tap **Import completed question template (.csv)**, review the validated question
 
 ## Web QR sessions (self-hosted)
 
+For the GitHub Streamlit Community Cloud deployment settings and data-retention limits, see [web/DEPLOY.md](web/DEPLOY.md).
+
 The Android admin can export a prepared set as JSON. On a reachable computer/server:
 
 ```bash
