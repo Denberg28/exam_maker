@@ -31,6 +31,21 @@ def session_base_url():
     return st.context.url.rstrip("/")
 
 
+def join_page():
+    st.title("Choose an exam")
+    open_sessions = [s for s in list_sessions(DB) if s["active"]]
+    if not open_sessions:
+        st.info("No exams are open yet. Ask your administrator to prepare a session.")
+        return
+    for session in open_sessions:
+        st.subheader(session["title"])
+        st.caption(session["label"])
+        if st.button("Start this exam", key="join_" + session["code"]):
+            st.query_params.clear()
+            st.query_params["session"] = session["code"]
+            st.rerun()
+
+
 def admin_page():
     st.title("Exam Maker • Admin")
     if not ADMIN_PASSWORD:
@@ -146,10 +161,21 @@ if st.query_params.get("admin") == "1":
     admin_page()
 elif st.query_params.get("session"):
     candidate_page(st.query_params["session"])
+elif st.query_params.get("join") == "1":
+    join_page()
 else:
     st.title("Exam Maker")
-    st.write("Join an exam using the QR code or link shared by your administrator.")
-    st.info("QR codes appear in Admin after a test set is uploaded and a session is created.")
+    st.write("Scan to open the exam start page on your phone.")
+    base_url = session_base_url()
+    if base_url:
+        join_url = base_url + "/?join=1"
+        st.image(qr_png(join_url), caption="Exam Maker • start page", width=240)
+        st.code(join_url)
+        if st.button("Continue on this device"):
+            st.query_params["join"] = "1"
+            st.rerun()
+    else:
+        st.warning("Unable to determine this app's URL. Set EXAM_PUBLIC_URL to display the QR code.")
     if st.button("Open Admin", type="primary"):
         st.query_params["admin"] = "1"
         st.rerun()
