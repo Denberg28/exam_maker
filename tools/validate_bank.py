@@ -9,7 +9,7 @@ for q in bank['questions']:
     assert q['id'].strip() and q['id'] not in ids
     ids.add(q['id'])
     assert q['prompt'].strip() and q['explanation'].strip()
-    assert 2 <= len(q['options']) <= 6
+    assert len(q['options']) == 4
     assert all(isinstance(x, str) and x.strip() for x in q['options'])
     assert len(set(q['options'])) == len(q['options'])
     assert type(q['correct']) is int and 0 <= q['correct'] < len(q['options'])
